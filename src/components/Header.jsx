@@ -55,7 +55,7 @@ const Header = ({ onOpenAuth, onOpenDashboard, onOpenProfileSettings, onOpenCont
   const userCanCreateCampaign = canCreateCampaign(user);
 
   return (
-    <header className="sticky top-0 z-50 bg-brand-cream border-b border-brand-border">
+    <header className="sticky top-0 z-50 bg-[#070E1A]/95 backdrop-blur-md border-b border-white/10 text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
@@ -68,10 +68,10 @@ const Header = ({ onOpenAuth, onOpenDashboard, onOpenProfileSettings, onOpenCont
                 height="44"
                 fetchPriority="high"
                 decoding="async"
-                className="h-10 sm:h-11 w-auto object-contain rounded-xl bg-white p-1 group-hover:scale-105 transition-transform duration-200"
+                className="h-10 sm:h-11 w-auto object-contain rounded-xl bg-white p-1 group-hover:scale-105 transition-transform duration-200 shadow-sm"
               />
             </picture>
-            <span className="text-xl sm:text-2xl font-bold font-inter tracking-wide text-brand-orange" dir="ltr">OPPI</span>
+            <span className="text-xl sm:text-2xl font-bold font-inter tracking-wide text-white group-hover:text-brand-orange transition-colors" dir="ltr">OPPI</span>
           </a>
 
           {/* Desktop Nav */}
@@ -84,16 +84,16 @@ const Header = ({ onOpenAuth, onOpenDashboard, onOpenProfileSettings, onOpenCont
                 aria-haspopup="true"
                 aria-expanded={isLangMenuOpen}
                 aria-label="تغيير لغة العرض"
-                className="flex items-center gap-2 px-3 py-2 rounded-lg text-brand-brownLight hover:text-brand-brown hover:bg-white/50 transition-colors font-bold text-sm"
+                className="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition-colors font-bold text-sm"
               >
-                <Globe className="w-4 h-4" aria-hidden="true" />
+                <Globe className="w-4 h-4 text-brand-orange" aria-hidden="true" />
                 <span className="uppercase">{language}</span>
               </button>
               {isLangMenuOpen && (
-                <div role="menu" className="absolute top-full mt-2 w-32 bg-white border border-brand-border rounded-[20px] shadow-xl overflow-hidden py-1 z-50 ltr:right-0 rtl:left-0">
-                  <button role="menuitem" onClick={() => { setLanguage('ar'); setIsLangMenuOpen(false); }} className="w-full text-start px-4 py-2 hover:bg-brand-cream text-brand-brown text-sm font-bold">🇩🇿 العربية</button>
-                  <button role="menuitem" onClick={() => { setLanguage('fr'); setIsLangMenuOpen(false); }} className="w-full text-start px-4 py-2 hover:bg-brand-cream text-brand-brown text-sm font-bold">🇫🇷 Français</button>
-                  <button role="menuitem" onClick={() => { setLanguage('en'); setIsLangMenuOpen(false); }} className="w-full text-start px-4 py-2 hover:bg-brand-cream text-brand-brown text-sm font-bold">🇬🇧 English</button>
+                <div role="menu" className="absolute top-full mt-2 w-32 bg-[#0B1528] border border-white/15 rounded-[20px] shadow-2xl overflow-hidden py-1 z-50 ltr:right-0 rtl:left-0 text-white">
+                  <button role="menuitem" onClick={() => { setLanguage('ar'); setIsLangMenuOpen(false); }} className="w-full text-start px-4 py-2 hover:bg-white/10 text-slate-200 hover:text-white text-sm font-bold">🇩🇿 العربية</button>
+                  <button role="menuitem" onClick={() => { setLanguage('fr'); setIsLangMenuOpen(false); }} className="w-full text-start px-4 py-2 hover:bg-white/10 text-slate-200 hover:text-white text-sm font-bold">🇫🇷 Français</button>
+                  <button role="menuitem" onClick={() => { setLanguage('en'); setIsLangMenuOpen(false); }} className="w-full text-start px-4 py-2 hover:bg-white/10 text-slate-200 hover:text-white text-sm font-bold">🇬🇧 English</button>
                 </div>
               )}
             </div>
@@ -104,7 +104,7 @@ const Header = ({ onOpenAuth, onOpenDashboard, onOpenProfileSettings, onOpenCont
               onMouseEnter={preloadContactModal}
               onFocus={preloadContactModal}
               aria-label="تواصل معنا"
-              className="flex items-center gap-1.5 px-3 py-2 rounded-full text-brand-brownLight hover:text-brand-orange hover:bg-white/60 transition-colors font-bold text-xs"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-full text-slate-300 hover:text-white hover:bg-white/10 transition-colors font-bold text-xs"
               title="تواصل معنا"
             >
               <Mail className="w-4 h-4 text-brand-orange" aria-hidden="true" />
@@ -122,7 +122,7 @@ const Header = ({ onOpenAuth, onOpenDashboard, onOpenProfileSettings, onOpenCont
                   onClick={() => onOpenDashboard('messages', userIsBrand ? 'brand' : 'creator')}
                   onMouseEnter={() => preloadDashboardForRole(userIsBrand ? 'brand' : 'creator')}
                   onFocus={() => preloadDashboardForRole(userIsBrand ? 'brand' : 'creator')}
-                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-full text-brand-brown hover:text-brand-orange hover:bg-white transition-colors font-bold text-xs border border-brand-border/40 shadow-sm"
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-full text-slate-200 hover:text-white hover:bg-white/10 transition-colors font-bold text-xs border border-white/15 shadow-sm"
                   title="الرسائل والمحادثات"
                 >
                   <MessageSquare className="w-4 h-4 text-brand-orange" aria-hidden="true" />
@@ -135,7 +135,7 @@ const Header = ({ onOpenAuth, onOpenDashboard, onOpenProfileSettings, onOpenCont
                     onClick={() => onOpenDashboard('create', 'brand')}
                     onMouseEnter={() => preloadDashboardForRole('brand')}
                     onFocus={() => preloadDashboardForRole('brand')}
-                    className="btn-primary text-xs flex items-center gap-1.5 shadow-sm"
+                    className="btn-primary text-xs flex items-center gap-1.5 shadow-md shadow-brand-orange/30"
                     title="إضافة حملة جديدة"
                   >
                     <PlusCircle className="w-4 h-4" aria-hidden="true" />
@@ -149,7 +149,7 @@ const Header = ({ onOpenAuth, onOpenDashboard, onOpenProfileSettings, onOpenCont
                     onClick={() => onOpenDashboard('overview', 'brand')}
                     onMouseEnter={() => preloadDashboardForRole('brand')}
                     onFocus={() => preloadDashboardForRole('brand')}
-                    className="flex items-center gap-2 px-4 py-2 rounded-full text-brand-brown hover:bg-white transition-colors font-bold text-sm"
+                    className="flex items-center gap-2 px-4 py-2 rounded-full text-slate-200 hover:text-white hover:bg-white/10 transition-colors font-bold text-sm"
                   >
                     <Building2 className="w-4 h-4 text-brand-orange" aria-hidden="true" />
                     <span>{t('brandDashboard')}</span>
@@ -161,7 +161,7 @@ const Header = ({ onOpenAuth, onOpenDashboard, onOpenProfileSettings, onOpenCont
                     onClick={() => onOpenDashboard('overview')}
                     onMouseEnter={() => preloadDashboardForRole('creator')}
                     onFocus={() => preloadDashboardForRole('creator')}
-                    className="flex items-center gap-2 px-4 py-2 rounded-full text-brand-brown hover:bg-white transition-colors font-bold text-sm"
+                    className="flex items-center gap-2 px-4 py-2 rounded-full text-slate-200 hover:text-white hover:bg-white/10 transition-colors font-bold text-sm"
                   >
                     <Sparkles className="w-4 h-4 text-brand-orange" aria-hidden="true" />
                     <span>{t('creatorDashboard')}</span>
@@ -173,7 +173,7 @@ const Header = ({ onOpenAuth, onOpenDashboard, onOpenProfileSettings, onOpenCont
                     onClick={() => onOpenDashboard('admin')}
                     onMouseEnter={() => preloadDashboardForRole('admin')}
                     onFocus={() => preloadDashboardForRole('admin')}
-                    className="flex items-center gap-2 px-4 py-2 rounded-full text-purple-600 hover:bg-white transition-colors font-bold text-sm"
+                    className="flex items-center gap-2 px-4 py-2 rounded-full text-purple-300 hover:text-white hover:bg-white/10 transition-colors font-bold text-sm"
                   >
                     <ShieldAlert className="w-4 h-4" aria-hidden="true" />
                     <span>{t('adminDashboard')}</span>
@@ -184,7 +184,7 @@ const Header = ({ onOpenAuth, onOpenDashboard, onOpenProfileSettings, onOpenCont
                   onClick={onOpenProfileSettings}
                   onMouseEnter={preloadProfileSettingsModal}
                   onFocus={preloadProfileSettingsModal}
-                  className="flex items-center gap-2 text-brand-brownLight hover:text-brand-brown transition-colors text-sm px-3 py-2 rounded-full hover:bg-white"
+                  className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors text-sm px-3 py-2 rounded-full hover:bg-white/10"
                 >
                   <Settings className="w-4 h-4" aria-hidden="true" />
                   <span>{t('profileSettings') || 'الملف الشخصي'}</span>
@@ -192,7 +192,7 @@ const Header = ({ onOpenAuth, onOpenDashboard, onOpenProfileSettings, onOpenCont
 
                 <button
                   onClick={logout}
-                  className="flex items-center gap-2 text-brand-brownLight hover:text-brand-brown transition-colors text-sm px-3 py-2 rounded-full hover:bg-white"
+                  className="flex items-center gap-2 text-slate-300 hover:text-red-300 transition-colors text-sm px-3 py-2 rounded-full hover:bg-white/10"
                 >
                   <LogOut className="w-4 h-4" aria-hidden="true" />
                   <span>{t('logout')}</span>
@@ -224,7 +224,7 @@ const Header = ({ onOpenAuth, onOpenDashboard, onOpenProfileSettings, onOpenCont
                   onClick={() => onOpenAuth('login')}
                   onMouseEnter={preloadAuthModal}
                   onFocus={preloadAuthModal}
-                  className="text-brand-brown hover:text-brand-orange transition-colors text-sm font-bold px-4 py-2 rounded-full"
+                  className="text-slate-200 hover:text-white transition-colors text-sm font-bold px-4 py-2 rounded-full hover:bg-white/10"
                 >
                   {t('login')}
                 </button>
@@ -232,7 +232,7 @@ const Header = ({ onOpenAuth, onOpenDashboard, onOpenProfileSettings, onOpenCont
                   onClick={() => onOpenAuth('signup', 'creator')}
                   onMouseEnter={preloadAuthModal}
                   onFocus={preloadAuthModal}
-                  className="btn-primary text-xs flex items-center gap-1.5"
+                  className="btn-primary text-xs flex items-center gap-1.5 shadow-md shadow-brand-orange/30"
                 >
                   <Sparkles className="w-4 h-4" aria-hidden="true" />
                   <span>{t('joinCreator')}</span>
@@ -241,9 +241,9 @@ const Header = ({ onOpenAuth, onOpenDashboard, onOpenProfileSettings, onOpenCont
                   onClick={() => onOpenAuth('signup', 'brand')}
                   onMouseEnter={preloadAuthModal}
                   onFocus={preloadAuthModal}
-                  className="btn-secondary text-xs flex items-center gap-1.5"
+                  className="btn-glass text-xs flex items-center gap-1.5"
                 >
-                  <Building2 className="w-4 h-4" aria-hidden="true" />
+                  <Building2 className="w-4 h-4 text-brand-orange" aria-hidden="true" />
                   <span>{t('joinBrand')}</span>
                 </button>
               </>
@@ -258,7 +258,7 @@ const Header = ({ onOpenAuth, onOpenDashboard, onOpenProfileSettings, onOpenCont
               aria-label={isMobileMenuOpen ? "إغلاق القائمة الرئيسية" : "فتح القائمة الرئيسية"}
               aria-expanded={isMobileMenuOpen}
               aria-controls="mobile-navigation"
-              className="text-brand-brown hover:text-brand-orange p-2"
+              className="text-white hover:text-brand-orange p-2 transition-colors"
             >
               {isMobileMenuOpen ? <X className="w-6 h-6" aria-hidden="true" /> : <Menu className="w-6 h-6" aria-hidden="true" />}
             </button>
@@ -268,12 +268,12 @@ const Header = ({ onOpenAuth, onOpenDashboard, onOpenProfileSettings, onOpenCont
 
       {/* Mobile Drawer */}
       {isMobileMenuOpen && (
-        <nav id="mobile-navigation" aria-label="قائمة الجوال" className="md:hidden bg-brand-cream border-b border-brand-border px-4 py-6 space-y-4">
+        <nav id="mobile-navigation" aria-label="قائمة الجوال" className="md:hidden bg-[#070E1A]/98 backdrop-blur-xl border-b border-white/10 px-4 py-6 space-y-4 text-white">
           {/* Mobile Language Switcher */}
-          <div className="flex items-center gap-2 mb-4 bg-white p-2 rounded-full shadow-sm justify-center">
-            <button onClick={() => { setLanguage('ar'); setIsMobileMenuOpen(false); }} className={`flex-1 py-2 rounded-full text-sm font-bold ${language === 'ar' ? 'bg-brand-orange/10 text-brand-orange' : 'text-brand-brownLight'}`}>العربية</button>
-            <button onClick={() => { setLanguage('fr'); setIsMobileMenuOpen(false); }} className={`flex-1 py-2 rounded-full text-sm font-bold ${language === 'fr' ? 'bg-brand-orange/10 text-brand-orange' : 'text-brand-brownLight'}`}>Français</button>
-            <button onClick={() => { setLanguage('en'); setIsMobileMenuOpen(false); }} className={`flex-1 py-2 rounded-full text-sm font-bold ${language === 'en' ? 'bg-brand-orange/10 text-brand-orange' : 'text-brand-brownLight'}`}>English</button>
+          <div className="flex items-center gap-2 mb-4 bg-white/10 p-2 rounded-full border border-white/10 justify-center">
+            <button onClick={() => { setLanguage('ar'); setIsMobileMenuOpen(false); }} className={`flex-1 py-2 rounded-full text-sm font-bold ${language === 'ar' ? 'bg-brand-orange text-white' : 'text-slate-300'}`}>العربية</button>
+            <button onClick={() => { setLanguage('fr'); setIsMobileMenuOpen(false); }} className={`flex-1 py-2 rounded-full text-sm font-bold ${language === 'fr' ? 'bg-brand-orange text-white' : 'text-slate-300'}`}>Français</button>
+            <button onClick={() => { setLanguage('en'); setIsMobileMenuOpen(false); }} className={`flex-1 py-2 rounded-full text-sm font-bold ${language === 'en' ? 'bg-brand-orange text-white' : 'text-slate-300'}`}>English</button>
           </div>
 
           {user ? (
@@ -282,7 +282,7 @@ const Header = ({ onOpenAuth, onOpenDashboard, onOpenProfileSettings, onOpenCont
               {userCanCreateCampaign && (
                 <button
                   onClick={() => { setIsMobileMenuOpen(false); onOpenDashboard('create', 'brand'); }}
-                  className="btn-primary w-full flex items-center justify-center gap-2"
+                  className="btn-primary w-full flex items-center justify-center gap-2 shadow-lg shadow-brand-orange/30"
                 >
                   <PlusCircle className="w-5 h-5" />
                   <span>{t('addCampaign')}</span>
@@ -291,7 +291,7 @@ const Header = ({ onOpenAuth, onOpenDashboard, onOpenProfileSettings, onOpenCont
 
               <button
                 onClick={() => { setIsMobileMenuOpen(false); onOpenDashboard('messages', userIsBrand ? 'brand' : 'creator'); }}
-                className="w-full py-3 rounded-full bg-white text-brand-brown flex items-center justify-center gap-2 font-bold shadow-sm"
+                className="w-full py-3 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center gap-2 font-bold border border-white/10"
               >
                 <MessageSquare className="w-5 h-5 text-brand-orange" />
                 <span>الرسائل والمحادثات</span>
@@ -300,7 +300,7 @@ const Header = ({ onOpenAuth, onOpenDashboard, onOpenProfileSettings, onOpenCont
               {userIsBrand && (
                 <button
                   onClick={() => { setIsMobileMenuOpen(false); onOpenDashboard('overview', 'brand'); }}
-                  className="w-full py-3 rounded-full bg-white text-brand-brown flex items-center justify-center gap-2 font-bold shadow-sm"
+                  className="w-full py-3 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center gap-2 font-bold border border-white/10"
                 >
                   <Building2 className="w-5 h-5 text-brand-orange" />
                   <span>{t('brandDashboard')}</span>
@@ -310,7 +310,7 @@ const Header = ({ onOpenAuth, onOpenDashboard, onOpenProfileSettings, onOpenCont
               {userIsCreator && (
                 <button
                   onClick={() => { setIsMobileMenuOpen(false); onOpenDashboard('overview'); }}
-                  className="w-full py-3 rounded-full bg-white text-brand-brown flex items-center justify-center gap-2 font-bold shadow-sm"
+                  className="w-full py-3 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center gap-2 font-bold border border-white/10"
                 >
                   <Sparkles className="w-5 h-5 text-brand-orange" />
                   <span>{t('creatorDashboard')}</span>
@@ -320,7 +320,7 @@ const Header = ({ onOpenAuth, onOpenDashboard, onOpenProfileSettings, onOpenCont
               {userIsAdmin && (
                 <button
                   onClick={() => { setIsMobileMenuOpen(false); onOpenDashboard('admin'); }}
-                  className="w-full py-3 rounded-full bg-white text-purple-600 flex items-center justify-center gap-2 font-bold shadow-sm"
+                  className="w-full py-3 rounded-full bg-purple-900/40 text-purple-200 border border-purple-500/30 flex items-center justify-center gap-2 font-bold shadow-sm"
                 >
                   <ShieldAlert className="w-5 h-5" />
                   <span>{t('adminDashboard')}</span>
@@ -329,15 +329,15 @@ const Header = ({ onOpenAuth, onOpenDashboard, onOpenProfileSettings, onOpenCont
 
               <button
                 onClick={() => { setIsMobileMenuOpen(false); onOpenProfileSettings(); }}
-                className="w-full py-3 rounded-full bg-white text-brand-brown flex items-center justify-center gap-2 font-bold shadow-sm"
+                className="w-full py-3 rounded-full bg-white/5 hover:bg-white/10 text-slate-200 flex items-center justify-center gap-2 font-bold border border-white/10"
               >
-                <Settings className="w-5 h-5 text-brand-brownLight" />
+                <Settings className="w-5 h-5 text-slate-400" />
                 <span>{t('profileSettings') || 'الملف الشخصي'}</span>
               </button>
 
               <button
                 onClick={() => { setIsMobileMenuOpen(false); logout(); }}
-                className="w-full py-2 text-brand-brownLight hover:text-brand-brown flex items-center justify-center gap-2 text-sm font-bold"
+                className="w-full py-2 text-slate-400 hover:text-red-400 flex items-center justify-center gap-2 text-sm font-bold"
               >
                 <LogOut className="w-4 h-4" />
                 <span>{t('logout')}</span>
@@ -347,22 +347,22 @@ const Header = ({ onOpenAuth, onOpenDashboard, onOpenProfileSettings, onOpenCont
             <div className="space-y-3">
               <button
                 onClick={() => { setIsMobileMenuOpen(false); onOpenAuth('login'); }}
-                className="w-full py-3 rounded-full bg-white text-brand-brown font-bold shadow-sm"
+                className="w-full py-3 rounded-full bg-white/10 text-white font-bold border border-white/15"
               >
                 {t('login')}
               </button>
               <button
                 onClick={() => { setIsMobileMenuOpen(false); onOpenAuth('signup', 'creator'); }}
-                className="btn-primary w-full flex items-center justify-center gap-2"
+                className="btn-primary w-full flex items-center justify-center gap-2 shadow-lg shadow-brand-orange/30"
               >
                 <Sparkles className="w-5 h-5" />
                 <span>{t('joinCreator')}</span>
               </button>
               <button
                 onClick={() => { setIsMobileMenuOpen(false); onOpenAuth('signup', 'brand'); }}
-                className="btn-secondary w-full flex items-center justify-center gap-2"
+                className="btn-glass w-full flex items-center justify-center gap-2"
               >
-                <Building2 className="w-5 h-5" />
+                <Building2 className="w-5 h-5 text-brand-orange" />
                 <span>{t('joinBrand')}</span>
               </button>
             </div>
@@ -370,7 +370,7 @@ const Header = ({ onOpenAuth, onOpenDashboard, onOpenProfileSettings, onOpenCont
           {/* Mobile Contact Link */}
           <button
             onClick={() => { setIsMobileMenuOpen(false); onOpenContact?.(); }}
-            className="w-full py-2.5 rounded-full bg-brand-cream border border-brand-border text-brand-brown flex items-center justify-center gap-2 text-xs font-bold"
+            className="w-full py-2.5 rounded-full bg-white/5 border border-white/10 text-slate-300 flex items-center justify-center gap-2 text-xs font-bold"
           >
             <Mail className="w-4 h-4 text-brand-orange" aria-hidden="true" />
             <span>تواصل معنا (madjedalirachedi291@gmail.com)</span>

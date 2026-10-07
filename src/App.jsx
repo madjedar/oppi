@@ -419,7 +419,7 @@ function AppContent() {
   }
 
   return (
-    <div className="min-h-screen bg-brand-cream">
+    <div className="min-h-screen bg-[#F8FAFC]">
       {/* ─── Accessible Skip to Main Content Link ─── */}
       <a 
         href="#main-content" 
@@ -471,38 +471,42 @@ function AppContent() {
             />
 
             {/* ─── Section 2: Direct 3-Step Process ─── */}
-            <section aria-labelledby="how-it-works-heading" className="py-20 px-4 border-b border-brand-border relative bg-brand-cream">
+            <section aria-labelledby="how-it-works-heading" className="py-20 px-4 border-b border-slate-200/80 relative bg-white">
               <div className="max-w-5xl mx-auto text-center">
-                <h2 id="how-it-works-heading" className="text-3xl sm:text-5xl font-black text-brand-brown mb-4 leading-relaxed">
+                <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-orange-50 border border-brand-orange/20 text-brand-orange font-bold text-xs mb-3">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>خطوات بسيطة وسريعة</span>
+                </div>
+                <h2 id="how-it-works-heading" className="text-3xl sm:text-5xl font-black text-brand-navy mb-4 leading-relaxed">
                   {t('howItWorks')} <span className="text-brand-orange">{t('howItWorksHighlight')}</span>
                 </h2>
-                <p className="text-brand-brownLight max-w-xl mx-auto text-sm sm:text-base mb-16 leading-relaxed">
+                <p className="text-slate-600 max-w-xl mx-auto text-sm sm:text-base mb-16 leading-relaxed">
                   {t('howItWorksSub')}
                 </p>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                  <div className="bg-white border border-brand-border p-8 text-center relative group rounded-[40px] shadow-sm hover:shadow-md transition-shadow">
-                    <div className="w-14 h-14 rounded-full bg-brand-cream text-brand-orange text-2xl font-black flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+                  <div className="bg-slate-50/80 border border-slate-200/90 p-8 text-center relative group rounded-[36px] shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all">
+                    <div className="w-14 h-14 rounded-2xl bg-orange-50 text-brand-orange border border-brand-orange/20 text-2xl font-black flex items-center justify-center mx-auto mb-6 group-hover:bg-brand-orange group-hover:text-white group-hover:scale-110 transition-all shadow-sm">
                       1
                     </div>
-                    <h3 className="text-xl font-bold text-brand-brown mb-3 tracking-wide">{t('step1Title')}</h3>
-                    <p className="text-brand-brownLight text-sm leading-relaxed">{t('step1Desc')}</p>
+                    <h3 className="text-xl font-bold text-brand-navy mb-3 tracking-wide">{t('step1Title')}</h3>
+                    <p className="text-slate-600 text-sm leading-relaxed">{t('step1Desc')}</p>
                   </div>
 
-                  <div className="bg-white border border-brand-border p-8 text-center relative group rounded-[40px] shadow-sm hover:shadow-md transition-shadow">
-                    <div className="w-14 h-14 rounded-full bg-brand-cream text-brand-orange text-2xl font-black flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+                  <div className="bg-slate-50/80 border border-slate-200/90 p-8 text-center relative group rounded-[36px] shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all">
+                    <div className="w-14 h-14 rounded-2xl bg-orange-50 text-brand-orange border border-brand-orange/20 text-2xl font-black flex items-center justify-center mx-auto mb-6 group-hover:bg-brand-orange group-hover:text-white group-hover:scale-110 transition-all shadow-sm">
                       2
                     </div>
-                    <h3 className="text-xl font-bold text-brand-brown mb-3 tracking-wide">{t('step2Title')}</h3>
-                    <p className="text-brand-brownLight text-sm leading-relaxed">{t('step2Desc')}</p>
+                    <h3 className="text-xl font-bold text-brand-navy mb-3 tracking-wide">{t('step2Title')}</h3>
+                    <p className="text-slate-600 text-sm leading-relaxed">{t('step2Desc')}</p>
                   </div>
 
-                  <div className="bg-white border border-brand-border p-8 text-center relative group rounded-[40px] shadow-sm hover:shadow-md transition-shadow">
-                    <div className="w-14 h-14 rounded-full bg-brand-cream text-brand-orange text-2xl font-black flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+                  <div className="bg-slate-50/80 border border-slate-200/90 p-8 text-center relative group rounded-[36px] shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all">
+                    <div className="w-14 h-14 rounded-2xl bg-orange-50 text-brand-orange border border-brand-orange/20 text-2xl font-black flex items-center justify-center mx-auto mb-6 group-hover:bg-brand-orange group-hover:text-white group-hover:scale-110 transition-all shadow-sm">
                       3
                     </div>
-                    <h3 className="text-xl font-bold text-brand-brown mb-3 tracking-wide">{t('step3Title')}</h3>
-                    <p className="text-brand-brownLight text-sm leading-relaxed">{t('step3Desc')}</p>
+                    <h3 className="text-xl font-bold text-brand-navy mb-3 tracking-wide">{t('step3Title')}</h3>
+                    <p className="text-slate-600 text-sm leading-relaxed">{t('step3Desc')}</p>
                   </div>
                 </div>
               </div>
@@ -511,12 +515,11 @@ function AppContent() {
         )}
 
         {/* ─── Section 3: Clean Creators & Stores Showcase Grid ─── */}
-        {isLoggedIn && (
-          <section id="creators" aria-labelledby="showcase-heading" className="py-20 px-4 bg-brand-cream">
+        <section id="creators" aria-labelledby="showcase-heading" className="py-20 px-4 bg-[#F8FAFC]">
           <div className="max-w-7xl mx-auto">
             {/* Main Showcase Toggle Tabs (Creators vs Stores) */}
             <div className="flex justify-center mb-10">
-              <div role="tablist" aria-label="أقسام المعرض" className="p-1.5 bg-white border border-brand-border rounded-full flex gap-2 shadow-sm">
+              <div role="tablist" aria-label="أقسام المعرض" className="p-1.5 bg-white border border-slate-200/90 rounded-full flex gap-2 shadow-sm">
                 <button
                   type="button"
                   role="tab"
@@ -747,7 +750,7 @@ function AppContent() {
                     }}
                     onMouseEnter={preloadCreatorDetailsModal}
                     onFocus={preloadCreatorDetailsModal}
-                    className="bg-brand-orange text-white hover:-translate-y-1.5 focus-visible:ring-4 focus-visible:ring-brand-orange/40 focus-visible:outline-none rounded-[36px] p-6 sm:p-7 cursor-pointer group flex flex-col justify-between transition-all duration-300 shadow-md hover:shadow-2xl relative overflow-hidden"
+                    className="bg-white border border-slate-200/90 text-slate-800 hover:-translate-y-1.5 focus-visible:ring-4 focus-visible:ring-brand-orange/40 focus-visible:outline-none rounded-[32px] p-6 sm:p-7 cursor-pointer group flex flex-col justify-between transition-all duration-300 shadow-sm hover:shadow-2xl relative overflow-hidden hover:border-brand-orange/40"
                   >
                     <div>
                       {/* Top Bar: Avatar + Name + Badges */}
@@ -761,18 +764,18 @@ function AppContent() {
                           height="56"
                           loading={isAboveFold ? 'eager' : 'lazy'}
                           fetchPriority={isAboveFold ? 'high' : 'auto'}
-                          className="w-14 h-14 rounded-full bg-white/20 object-cover border-2 border-white/40 group-hover:scale-105 transition-transform"
+                          className="w-14 h-14 rounded-full bg-slate-100 object-cover border-2 border-slate-200 group-hover:scale-105 group-hover:border-brand-orange transition-all shadow-sm"
                         />
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-bold text-white text-base truncate flex items-center gap-1">
+                          <h3 className="font-bold text-brand-navy text-base truncate flex items-center gap-1 group-hover:text-brand-orange transition-colors">
                             <span>{creatorName}</span>
-                            {creator.verified && <BadgeCheck className="w-4 h-4 text-white" aria-hidden="true" />}
+                            {creator.verified && <BadgeCheck className="w-4 h-4 text-brand-orange shrink-0" aria-hidden="true" />}
                           </h3>
-                          <div className="flex items-center gap-2 text-xs text-white/80 mt-0.5">
-                            <span className="truncate">{getLocalizedItem(creator, 'category', language) || 'مبدع'}</span>
+                          <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
+                            <span className="truncate font-medium">{getLocalizedItem(creator, 'category', language) || 'مبدع'}</span>
                             <span>•</span>
                             <span className="flex items-center gap-0.5 shrink-0">
-                              <MapPin className="w-3 h-3" aria-hidden="true" />
+                              <MapPin className="w-3 h-3 text-slate-400" aria-hidden="true" />
                               <span>{creatorWilaya}</span>
                             </span>
                           </div>
@@ -780,24 +783,24 @@ function AppContent() {
                       </div>
 
                       {/* Bio */}
-                      <p className="text-xs text-white/90 line-clamp-2 leading-relaxed mb-4">
+                      <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed mb-4 font-normal">
                         {getLocalizedItem(creator, 'bio', language) || 'صانع محتوى رقمي متألق على منصات التواصل الاجتماعي.'}
                       </p>
 
                       {/* Social Platforms Row */}
                       <div className="flex items-center gap-2 mb-4">
                         {creator.instagram_url && (
-                          <span className="px-2 py-0.5 rounded-full bg-white/20 text-[10px] font-bold text-white flex items-center gap-1">
+                          <span className="px-2.5 py-0.5 rounded-full bg-slate-100 text-[10px] font-bold text-slate-700 flex items-center gap-1 border border-slate-200/80">
                             <span>Instagram</span>
                           </span>
                         )}
                         {creator.tiktok_url && (
-                          <span className="px-2 py-0.5 rounded-full bg-white/20 text-[10px] font-bold text-white flex items-center gap-1">
+                          <span className="px-2.5 py-0.5 rounded-full bg-slate-100 text-[10px] font-bold text-slate-700 flex items-center gap-1 border border-slate-200/80">
                             <span>TikTok</span>
                           </span>
                         )}
                         {creator.youtube_url && (
-                          <span className="px-2 py-0.5 rounded-full bg-white/20 text-[10px] font-bold text-white flex items-center gap-1">
+                          <span className="px-2.5 py-0.5 rounded-full bg-slate-100 text-[10px] font-bold text-slate-700 flex items-center gap-1 border border-slate-200/80">
                             <span>YouTube</span>
                           </span>
                         )}
@@ -805,10 +808,10 @@ function AppContent() {
                     </div>
 
                     {/* Bottom Pricing & Action */}
-                    <div className="pt-3 border-t border-white/20 flex items-center justify-between">
+                    <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
                       <div>
-                        <span className="text-[10px] text-white/80 font-medium block">{t('deliveryStartsAt')}</span>
-                        <span className="font-black text-white text-sm font-mono bg-white/20 px-2.5 py-0.5 rounded-full">
+                        <span className="text-[10px] text-slate-400 font-medium block">{t('deliveryStartsAt')}</span>
+                        <span className="font-black text-brand-navy text-sm font-mono bg-orange-50 text-brand-orange border border-brand-orange/20 px-2.5 py-0.5 rounded-full">
                           {formatDZD(rate, language)}
                         </span>
                       </div>
@@ -821,7 +824,7 @@ function AppContent() {
                             handleContactCreator(creator);
                           }}
                           aria-label={`تواصل مع ${creatorName}`}
-                          className="px-3 py-1.5 rounded-full bg-white/20 hover:bg-white hover:text-brand-orange text-white text-xs font-bold transition-all border border-white/30 flex items-center gap-1 shadow-sm"
+                          className="px-3 py-1.5 rounded-full bg-slate-100 hover:bg-brand-navy hover:text-white text-slate-700 text-xs font-bold transition-all border border-slate-200 flex items-center gap-1 shadow-sm"
                         >
                           <MessageSquare className="w-3.5 h-3.5" />
                           <span>{t('creatorContact')}</span>
@@ -835,7 +838,7 @@ function AppContent() {
                           onMouseEnter={preloadCheckoutModal}
                           onFocus={preloadCheckoutModal}
                           aria-label={`توظيف ${creatorName}`}
-                          className="px-3.5 py-1.5 rounded-full bg-white text-brand-orange hover:bg-brand-cream text-xs font-bold shadow-sm transition-all"
+                          className="btn-primary px-3.5 py-1.5 rounded-full text-xs font-bold shadow-md shadow-brand-orange/25 transition-all hover:scale-105 active:scale-95"
                         >
                           {t('creatorHire')}
                         </button>
@@ -868,7 +871,7 @@ function AppContent() {
                     }}
                     onMouseEnter={preloadStoreDetailsModal}
                     onFocus={preloadStoreDetailsModal}
-                    className="bg-white border border-brand-border hover:-translate-y-1 focus-visible:ring-4 focus-visible:ring-brand-orange/40 focus-visible:outline-none rounded-[36px] p-6 sm:p-8 cursor-pointer group flex flex-col justify-between transition-all duration-300 shadow-sm hover:shadow-lg"
+                    className="bg-white border border-slate-200/90 hover:-translate-y-1.5 focus-visible:ring-4 focus-visible:ring-brand-orange/40 focus-visible:outline-none rounded-[32px] p-6 sm:p-8 cursor-pointer group flex flex-col justify-between transition-all duration-300 shadow-sm hover:shadow-2xl hover:border-brand-orange/40"
                   >
                     <div>
                       <div className="flex items-center gap-3.5 mb-4">
@@ -881,42 +884,42 @@ function AppContent() {
                           height="64"
                           loading={isAboveFold ? 'eager' : 'lazy'}
                           fetchPriority={isAboveFold ? 'high' : 'auto'}
-                          className="w-16 h-16 rounded-full bg-brand-cream object-cover border-2 border-brand-border group-hover:scale-105 transition-transform"
+                          className="w-16 h-16 rounded-2xl bg-slate-100 object-cover border-2 border-slate-200 group-hover:scale-105 group-hover:border-brand-orange transition-all shadow-sm"
                         />
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-bold text-brand-brown text-lg truncate flex items-center gap-1.5">
+                          <h3 className="font-bold text-brand-navy text-lg truncate flex items-center gap-1.5 group-hover:text-brand-orange transition-colors">
                             <span>{storeName}</span>
-                            {store.verified && <BadgeCheck className="w-5 h-5 text-brand-orange" aria-hidden="true" />}
+                            {store.verified && <BadgeCheck className="w-5 h-5 text-brand-orange shrink-0" aria-hidden="true" />}
                           </h3>
-                          <div className="flex items-center gap-2 text-xs text-brand-brownLight mt-0.5">
-                            <span>{getLocalizedItem(store, 'sector', language)}</span>
+                          <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
+                            <span className="font-medium">{getLocalizedItem(store, 'sector', language)}</span>
                             <span>•</span>
                             <span className="flex items-center gap-0.5">
-                              <MapPin className="w-3 h-3" aria-hidden="true" />
+                              <MapPin className="w-3 h-3 text-slate-400" aria-hidden="true" />
                               <span>{getLocalizedItem(store, 'location', language)}</span>
                             </span>
                           </div>
                         </div>
                       </div>
 
-                      <p className="text-sm text-brand-brownLight line-clamp-2 leading-relaxed mb-6">
+                      <p className="text-sm text-slate-600 line-clamp-2 leading-relaxed mb-6 font-normal">
                         {getLocalizedItem(store, 'bio', language)}
                       </p>
                     </div>
 
-                  <div className="pt-4 border-t border-brand-border flex items-center justify-between">
-                    <div>
-                      <span className="text-[10px] text-brand-brownLight uppercase tracking-wider block">{t('activeCampaignsCount')}</span>
-                      <span className="font-bold text-brand-brown text-base">
-                        {(store.activeCampaigns || 0)} {language === 'ar' ? ((store.activeCampaigns || 0) === 1 ? 'حملة' : 'حملات') : (language === 'fr' ? 'campagnes' : 'campaigns')}
-                      </span>
-                    </div>
-                    <div className="text-left">
-                      <span className="text-[10px] text-brand-brownLight uppercase tracking-wider block">{t('budgetOffer')}</span>
-                      <span className="font-bold text-brand-orange text-base bg-brand-orange/10 px-3 py-1 rounded-full">{formatDZD(store.totalBudget || 0, language)}</span>
+                    <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
+                      <div>
+                        <span className="text-[10px] text-slate-400 uppercase tracking-wider block font-medium">{t('activeCampaignsCount')}</span>
+                        <span className="font-bold text-brand-navy text-base">
+                          {(store.activeCampaigns || 0)} {language === 'ar' ? ((store.activeCampaigns || 0) === 1 ? 'حملة' : 'حملات') : (language === 'fr' ? 'campagnes' : 'campaigns')}
+                        </span>
+                      </div>
+                      <div className="text-start">
+                        <span className="text-[10px] text-slate-400 uppercase tracking-wider block font-medium">{t('budgetOffer')}</span>
+                        <span className="font-black text-brand-orange text-base font-mono bg-orange-50 border border-brand-orange/20 px-3 py-1 rounded-full">{formatDZD(store.totalBudget || 0, language)}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
               );
             })}
           </div>
@@ -939,7 +942,6 @@ function AppContent() {
           )}
         </div>
       </section>
-      )}
       </main>
 
       {/* ─── Footer ─── */}

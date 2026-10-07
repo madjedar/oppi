@@ -10,15 +10,22 @@ export default {
         sans: ['Cairo', 'Inter', 'sans-serif'],
       },
       colors: {
-        // Furnicom brand colors (WCAG AA Compliant)
+        // OPPI Theme (Dark Navy, Vibrant Orange, Crisp White)
         brand: {
-          orange: '#C05216',
-          orangeLight: '#D96522',
-          cream: '#FDF8F3',
-          creamDark: '#F3ECE1',
-          brown: '#2C1E16',
-          brownLight: '#4A3628',
-          border: '#E8DFD3'
+          navy: '#0B1528',
+          navyDark: '#070E1A',
+          navyLight: '#142544',
+          navyMuted: '#1E355B',
+          orange: '#FF6422',
+          orangeLight: '#FF7D45',
+          orangeDark: '#E64E0F',
+          orangeSubtle: '#FFF4ED',
+          cream: '#F8FAFC',
+          creamDark: '#F1F5F9',
+          brown: '#0B1528',
+          brownLight: '#475569',
+          border: '#E2E8F0',
+          surface: '#FFFFFF'
         }
       },
       animation: {

@@ -133,12 +133,12 @@ export default function NotificationDropdown({ onOpenMessages, onOpenDashboard }
         aria-haspopup="true"
         aria-expanded={isOpen}
         aria-label={`الإشعارات ${unreadCount > 0 ? `(${unreadCount} جديدة)` : ''}`}
-        className="relative p-2 text-brand-brownLight hover:text-brand-brown rounded-full hover:bg-white/60 transition-colors"
+        className="relative p-2 text-slate-300 hover:text-white rounded-full hover:bg-white/10 transition-colors"
         title="الإشعارات"
       >
         <Bell className="w-5 h-5" aria-hidden="true" />
         {unreadCount > 0 && (
-          <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-brand-orange rounded-full ring-2 ring-brand-cream animate-pulse"></span>
+          <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-brand-orange rounded-full ring-2 ring-[#070E1A] animate-pulse"></span>
         )}
       </button>
 
@@ -146,7 +146,7 @@ export default function NotificationDropdown({ onOpenMessages, onOpenDashboard }
         <div 
           role="region" 
           aria-label="لوحة الإشعارات"
-          className="absolute top-full left-0 sm:right-0 sm:left-auto mt-2 w-80 sm:w-96 bg-[#1a1c23] border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50 animate-fade-in" 
+          className="absolute top-full left-0 sm:right-0 sm:left-auto mt-2 w-80 sm:w-96 bg-[#0B1528] border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50 animate-fade-in" 
           dir="rtl"
         >
           <div className="p-4 border-b border-white/10 flex justify-between items-center bg-white/5">

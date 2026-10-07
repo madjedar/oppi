@@ -15,8 +15,8 @@
 
   body {
     font-family: 'Cairo', 'Inter', sans-serif;
-    background: #FDF8F3;
-    color: #2C1E16;
+    background: #F8FAFC;
+    color: #0B1528;
     min-height: 100vh;
     overflow-x: hidden;
     direction: rtl;
@@ -28,19 +28,19 @@
     height: 8px;
   }
   ::-webkit-scrollbar-track {
-    background: #FDF8F3;
+    background: #F8FAFC;
   }
   ::-webkit-scrollbar-thumb {
-    background: #E8DFD3;
+    background: #CBD5E1;
     border-radius: 4px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #D4C6B3;
+    background: #94A3B8;
   }
 
   /* Universal Accessible Focus Ring for Keyboard Users */
   :focus-visible {
-    outline: 2px solid #E8590C;
+    outline: 2px solid #FF6422;
     outline-offset: 2px;
   }
 
@@ -50,7 +50,7 @@
   select:focus-visible,
   textarea:focus-visible,
   [tabindex="0"]:focus-visible {
-    outline: 2px solid #E8590C;
+    outline: 2px solid #FF6422;
     outline-offset: 2px;
   }
 }
@@ -58,7 +58,7 @@
 @layer components {
   /* ── Flat Post / Card ── */
   .glass-card {
-    @apply bg-white border border-brand-border rounded-[32px] shadow-sm;
+    @apply bg-white border border-slate-200/90 rounded-[32px] shadow-sm;
   }
 
   .glass-card-hover {
@@ -66,30 +66,38 @@
   }
 
   .glass-card-hover:hover {
-    @apply border-brand-orangeLight shadow-md -translate-y-1;
+    @apply border-brand-orange/40 shadow-xl -translate-y-1;
   }
 
   /* ── Buttons ── */
   .btn-primary {
-    @apply px-6 py-3 rounded-full font-bold text-white bg-brand-orange transition-all hover:bg-brand-orangeLight hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0;
+    @apply px-6 py-3 rounded-full font-bold text-white bg-brand-orange transition-all duration-200 hover:bg-brand-orangeDark hover:shadow-lg hover:shadow-brand-orange/30 hover:-translate-y-0.5 active:translate-y-0;
   }
 
   .btn-secondary {
-    @apply px-6 py-3 rounded-full font-bold text-brand-orange border-2 border-brand-orange bg-transparent transition-all hover:bg-brand-orange/5 active:scale-95;
+    @apply px-6 py-3 rounded-full font-bold text-brand-orange border-2 border-brand-orange bg-transparent transition-all duration-200 hover:bg-brand-orange/10 active:scale-95;
   }
 
   .btn-gold {
-    @apply px-6 py-3 rounded-full font-bold text-white bg-brand-brown transition-all hover:bg-brand-brownLight active:scale-95;
+    @apply px-6 py-3 rounded-full font-bold text-white bg-brand-navy transition-all duration-200 hover:bg-brand-navyLight active:scale-95;
+  }
+
+  .btn-navy {
+    @apply px-6 py-3 rounded-full font-bold text-white bg-brand-navy transition-all duration-200 hover:bg-brand-navyLight active:scale-95 shadow-md;
+  }
+
+  .btn-glass {
+    @apply px-6 py-3 rounded-full font-bold text-white bg-white/10 hover:bg-white/20 border border-white/25 backdrop-blur-sm transition-all duration-200 active:scale-95;
   }
 
   /* ── Modal Overlay ── */
   .modal-overlay {
-    @apply fixed inset-0 z-50 flex items-center justify-center bg-brand-brown/40 backdrop-blur-sm;
+    @apply fixed inset-0 z-50 flex items-center justify-center bg-brand-navy/60 backdrop-blur-sm;
     -webkit-backdrop-filter: blur(4px);
   }
 
   .modal-content {
-    @apply bg-brand-cream border border-brand-border p-6 sm:p-8 w-full max-h-[90vh] overflow-y-auto animate-scale-in rounded-[32px] shadow-2xl;
+    @apply bg-white border border-slate-200 p-6 sm:p-8 w-full max-h-[90vh] overflow-y-auto animate-scale-in rounded-[32px] shadow-2xl;
   }
 
   /* ── Payment Badges (WCAG AA Compliant) ── */
@@ -103,7 +111,7 @@
 
   /* ── Input Styles ── */
   .input-field {
-    @apply w-full px-5 py-3.5 rounded-full bg-white border border-brand-border text-brand-brown placeholder-brand-brownLight/70 outline-none transition-all duration-300;
+    @apply w-full px-5 py-3.5 rounded-full bg-white border border-slate-200 text-brand-navy placeholder-slate-400 outline-none transition-all duration-300;
   }
 
   .input-field:focus {
