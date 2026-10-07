@@ -15,7 +15,7 @@ const Footer = ({ onLinkClick, onOpenContact }) => {
               <picture className="flex-shrink-0">
                 <img 
                   src="/logo.jpg" 
-                  alt="Créateur DZ Logo" 
+                  alt="OPPI Logo" 
                   width="40" 
                   height="40" 
                   loading="lazy" 
@@ -23,7 +23,7 @@ const Footer = ({ onLinkClick, onOpenContact }) => {
                   className="h-10 w-auto object-contain rounded-xl bg-brand-cream border border-brand-border p-1" 
                 />
               </picture>
-              <span className="text-brand-brown text-xl font-bold font-inter" dir="ltr">Créateur DZ</span>
+              <span className="text-brand-brown text-xl font-bold font-inter" dir="ltr">OPPI</span>
             </div>
             <p className="text-brand-brownLight text-sm mb-6 leading-relaxed">
               {t('footerAbout')}
@@ -101,7 +101,7 @@ const Footer = ({ onLinkClick, onOpenContact }) => {
         {/* Bottom Bar */}
         <div className="border-t border-brand-border mt-2 pt-6 flex flex-col md:flex-row justify-between items-center gap-4 text-sm">
           <p className="text-brand-brownLight text-center md:text-right">
-            © {new Date().getFullYear()} Créateur DZ — {t('footerRights')}
+            © {new Date().getFullYear()} OPPI — {t('footerRights')}
           </p>
           <p className="text-brand-brownLight flex items-center justify-center gap-2">
             {t('footerMadeIn')}

@@ -140,7 +140,7 @@ Deno.serve(async (req) => {
 
     const sanitizedDescription = description 
       ? String(description).replace(/[\r\n\x00-\x1F\x7F]+/g, ' ').trim().slice(0, 200) 
-      : 'Créateur DZ — صفقة رعاية'
+      : 'OPPI — صفقة رعاية'
 
     // 5. Insert pending transaction in Supabase
     let transactionId: string | null = null
@@ -174,7 +174,7 @@ Deno.serve(async (req) => {
     const CHARGILY_BASE_URL = isLive ? 'https://pay.chargily.net/api/v2' : 'https://pay.chargily.net/test/api/v2'
     const webhookUrl = `${SUPABASE_URL}/functions/v1/chargily-webhook`
 
-    const callerOrigin = req.headers.get('origin') || req.headers.get('referer') || 'https://createur-dz.netlify.app'
+    const callerOrigin = req.headers.get('origin') || req.headers.get('referer') || 'https://oppi-dz.netlify.app'
     let cleanOrigin = callerOrigin.replace(/\/$/, '')
     if (!cleanOrigin.startsWith('http://') && !cleanOrigin.startsWith('https://')) {
       cleanOrigin = 'https://' + cleanOrigin

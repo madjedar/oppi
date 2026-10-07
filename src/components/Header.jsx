@@ -63,7 +63,7 @@ const Header = ({ onOpenAuth, onOpenDashboard, onOpenProfileSettings, onOpenCont
             <picture className="flex items-center">
               <img 
                 src="/logo.jpg" 
-                alt="Créateur DZ Logo" 
+                alt="OPPI Logo" 
                 width="44"
                 height="44"
                 fetchPriority="high"
@@ -71,7 +71,7 @@ const Header = ({ onOpenAuth, onOpenDashboard, onOpenProfileSettings, onOpenCont
                 className="h-10 sm:h-11 w-auto object-contain rounded-xl bg-white p-1 group-hover:scale-105 transition-transform duration-200"
               />
             </picture>
-            <span className="text-xl sm:text-2xl font-bold font-inter tracking-wide text-brand-orange" dir="ltr">Créateur DZ</span>
+            <span className="text-xl sm:text-2xl font-bold font-inter tracking-wide text-brand-orange" dir="ltr">OPPI</span>
           </a>
 
           {/* Desktop Nav */}

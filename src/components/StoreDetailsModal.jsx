@@ -232,7 +232,7 @@ export default function StoreDetailsModal({ isOpen, onClose, store, onApplyCampa
             <ShieldCheck className="w-6 h-6 text-brand-orange flex-shrink-0" />
             <div>
               <span className="font-bold text-brand-brown block">{t('checkoutTerms')}</span>
-              <span className="font-medium mt-0.5 block">تضمن منصة Créateur DZ حماية الميزانية عبر حساب الضمان المالي المباشر.</span>
+              <span className="font-medium mt-0.5 block">تضمن منصة OPPI حماية الميزانية عبر حساب الضمان المالي المباشر.</span>
             </div>
           </div>
         </div>

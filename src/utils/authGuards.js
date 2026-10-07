@@ -1,6 +1,6 @@
 /**
  * Role-Based Access Control (RBAC) & Authorization Helper Utilities
- * Créateur DZ
+ * OPPI
  */
 
 export const ADMIN_EMAILS = [

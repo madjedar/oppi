@@ -1,5 +1,5 @@
 -- ═══════════════════════════════════════════════════════
--- Créateur DZ — Complete Unified Supabase Database Schema
+-- OPPI — Complete Unified Supabase Database Schema
 -- Includes Full Authentication, Authorization & RBAC Policies
 -- Run this in your Supabase SQL Editor (Dashboard -> SQL Editor)
 -- ═══════════════════════════════════════════════════════

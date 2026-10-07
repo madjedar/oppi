@@ -12,8 +12,8 @@ const puppeteer = require('puppeteer');
     console.log(`[PAGE ERROR] ${err.toString()}`);
   });
 
-  console.log('Navigating to https://createurdz.netlify.app ...');
-  await page.goto('https://createurdz.netlify.app', { waitUntil: 'networkidle0' });
+  console.log('Navigating to https://oppi.netlify.app ...');
+  await page.goto('https://oppi.netlify.app', { waitUntil: 'networkidle0' });
   
   await new Promise(r => setTimeout(r, 2000));
   

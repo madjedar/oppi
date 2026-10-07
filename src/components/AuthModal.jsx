@@ -238,7 +238,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login', initialRole = 'crea
           <picture className="flex-shrink-0">
             <img 
               src="/logo.jpg" 
-              alt="Créateur DZ" 
+              alt="OPPI" 
               width="64"
               height="64"
               loading="lazy"

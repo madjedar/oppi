@@ -1,5 +1,5 @@
 -- ══════════════════════════════════════════════════════════════════════
--- Créateur DZ — Comprehensive Backend Compatibility & Security Migration
+-- OPPI — Comprehensive Backend Compatibility & Security Migration
 -- Project: ccrtrgdgaqhvqqxbimdu
 -- ══════════════════════════════════════════════════════════════════════
 

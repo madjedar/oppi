@@ -89,7 +89,7 @@ export default function ContactModal({ isOpen, onClose }) {
     const safeMessage = sanitizeText(formData.message, 2000);
 
     // Format mailto body safely
-    const mailtoSubject = encodeURIComponent(`[Créateur DZ] ${safeSubject} - ${safeName}`);
+    const mailtoSubject = encodeURIComponent(`[OPPI] ${safeSubject} - ${safeName}`);
     const mailtoBody = encodeURIComponent(
       `الاسم: ${safeName}\nالبريد: ${safeEmail}\n\nالرسالة:\n${safeMessage}`
     );
@@ -138,7 +138,7 @@ export default function ContactModal({ isOpen, onClose }) {
               {t('contactUsTitle') || 'تواصل معنا مباشرة'}
             </h2>
             <p className="text-xs font-medium text-brand-brownLight mt-0.5">
-              {t('contactUsSub') || 'فريق Créateur DZ جاهز لمساعدتك والرد على كافة استفساراتك'}
+              {t('contactUsSub') || 'فريق OPPI جاهز لمساعدتك والرد على كافة استفساراتك'}
             </p>
           </div>
         </div>

@@ -65,7 +65,7 @@ export async function createCheckoutSession({ amount, dealId, creatorId, brandId
         deal_id: dealId,
         creator_id: creatorId,
         brand_id: brandId || session?.user?.id,
-        description: description || 'Créateur DZ — صفقة رعاية',
+        description: description || 'OPPI — صفقة رعاية',
         success_url: `${cleanOrigin}?payment=success&deal_id=${dealId || ''}`,
         failure_url: `${cleanOrigin}?payment=failed&deal_id=${dealId || ''}`,
       },

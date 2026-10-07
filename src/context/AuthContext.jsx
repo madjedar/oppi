@@ -48,7 +48,7 @@ export function AuthProvider({ children }) {
         if (currentUser) {
           await fetchProfile(currentUser.id)
         } else if (typeof localStorage !== 'undefined') {
-          const savedDev = localStorage.getItem('createur_dev_user');
+          const savedDev = localStorage.getItem('oppi_dev_user');
           if (savedDev) {
             try {
               const parsed = JSON.parse(savedDev);
@@ -138,7 +138,7 @@ export function AuthProvider({ children }) {
   const loginDevUser = (targetRole = 'brand') => {
     const demoUser = targetRole === 'creator' ? {
       id: 'e695998d-036b-4e6d-8f9d-253977932dd2',
-      email: 'creator.demo@createur.dz',
+      email: 'creator.demo@oppi.dz',
       role: 'creator',
       user_metadata: { full_name: 'صانع محتوى (تجريبي)', role: 'creator' }
     } : targetRole === 'admin' ? {
@@ -148,7 +148,7 @@ export function AuthProvider({ children }) {
       user_metadata: { full_name: 'مدير المنصة (تجريبي)', role: 'admin' }
     } : {
       id: '196f2255-a271-4ba3-9f8b-8c71a586acb4',
-      email: 'brand.demo@createur.dz',
+      email: 'brand.demo@oppi.dz',
       role: 'brand',
       user_metadata: { full_name: 'متجر فيكتوريا (تجريبي)', brand_name: 'فيكتوريا', role: 'brand' }
     };
@@ -162,14 +162,14 @@ export function AuthProvider({ children }) {
       wilaya: 'الجزائر'
     });
     if (typeof localStorage !== 'undefined') {
-      localStorage.setItem('createur_dev_user', JSON.stringify(demoUser));
+      localStorage.setItem('oppi_dev_user', JSON.stringify(demoUser));
     }
   };
 
   const logout = async () => {
     if (typeof localStorage !== 'undefined') {
-      localStorage.removeItem('createur_dev_user');
-      localStorage.removeItem('createur_dz_auth_session');
+      localStorage.removeItem('oppi_dev_user');
+      localStorage.removeItem('oppi_dz_auth_session');
     }
     if (typeof sessionStorage !== 'undefined') {
       sessionStorage.removeItem('oauth_login');

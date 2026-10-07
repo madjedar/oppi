@@ -196,7 +196,7 @@ export const getCreators = async (forceRefresh = false) => {
 // ------------------------------------------------------------------
 
 // Local Dev Campaign Store for offline/localhost testing
-const DEV_CAMPAIGNS_STORAGE_KEY = 'createur_dev_campaigns';
+const DEV_CAMPAIGNS_STORAGE_KEY = 'oppi_dev_campaigns';
 
 export const getLocalDevCampaigns = () => {
   if (typeof window === 'undefined') return [];
@@ -216,7 +216,7 @@ export const saveLocalDevCampaign = (camp) => {
     localStorage.setItem(DEV_CAMPAIGNS_STORAGE_KEY, JSON.stringify(updated));
     invalidateCache('campaigns');
     if (typeof BroadcastChannel !== 'undefined') {
-      const bc = new BroadcastChannel('createur_campaigns_channel');
+      const bc = new BroadcastChannel('oppi_campaigns_channel');
       bc.postMessage({ type: 'NEW_CAMPAIGN', campaign: camp });
       bc.close();
     }
@@ -452,9 +452,9 @@ export const applyToCampaign = async (campaignId, creatorId, pitchData = {}) => 
       ...payload
     };
     try {
-      const raw = localStorage.getItem('createur_dev_applications');
+      const raw = localStorage.getItem('oppi_dev_applications');
       const existing = raw ? JSON.parse(raw) : [];
-      localStorage.setItem('createur_dev_applications', JSON.stringify([localApp, ...existing]));
+      localStorage.setItem('oppi_dev_applications', JSON.stringify([localApp, ...existing]));
     } catch {}
     return [localApp];
   }
@@ -485,9 +485,9 @@ export const applyToCampaign = async (campaignId, creatorId, pitchData = {}) => 
         ...payload
       };
       try {
-        const raw = localStorage.getItem('createur_dev_applications');
+        const raw = localStorage.getItem('oppi_dev_applications');
         const existing = raw ? JSON.parse(raw) : [];
-        localStorage.setItem('createur_dev_applications', JSON.stringify([localApp, ...existing]));
+        localStorage.setItem('oppi_dev_applications', JSON.stringify([localApp, ...existing]));
       } catch {}
       return [localApp];
     }
@@ -545,7 +545,7 @@ export const getCreatorApplications = async (creatorId) => {
 
   // Include local dev applications if testing locally/offline
   try {
-    const rawDevApps = typeof window !== 'undefined' ? localStorage.getItem('createur_dev_applications') : null;
+    const rawDevApps = typeof window !== 'undefined' ? localStorage.getItem('oppi_dev_applications') : null;
     if (rawDevApps) {
       const devApps = JSON.parse(rawDevApps);
       const matchingDevApps = devApps.filter(app => app.creator_id === creatorId);
@@ -580,7 +580,7 @@ export const getBrandApplications = async (brandId) => {
 
   // Include local dev applications if testing locally/offline
   try {
-    const rawDevApps = typeof window !== 'undefined' ? localStorage.getItem('createur_dev_applications') : null;
+    const rawDevApps = typeof window !== 'undefined' ? localStorage.getItem('oppi_dev_applications') : null;
     if (rawDevApps) {
       const devApps = JSON.parse(rawDevApps);
       const matchingDevApps = devApps.filter(app => 
@@ -616,7 +616,7 @@ export const getProfileById = async (userId) => {
 // ------------------------------------------------------------------
 
 // Local Dev Message Store for offline/localhost testing
-const DEV_MESSAGES_STORAGE_KEY = 'createur_dev_messages';
+const DEV_MESSAGES_STORAGE_KEY = 'oppi_dev_messages';
 
 const getLocalDevMessages = () => {
   if (typeof window === 'undefined') return [];
@@ -636,7 +636,7 @@ const saveLocalDevMessage = (msg) => {
     localStorage.setItem(DEV_MESSAGES_STORAGE_KEY, JSON.stringify(updated));
     // Broadcast to other tabs/windows in real time
     if (typeof BroadcastChannel !== 'undefined') {
-      const bc = new BroadcastChannel('createur_chat_channel');
+      const bc = new BroadcastChannel('oppi_chat_channel');
       bc.postMessage({ type: 'NEW_MESSAGE', message: msg });
       bc.close();
     }
@@ -707,7 +707,7 @@ export const getUserConversations = async (userId) => {
   }
 
   const resultConversations = Array.from(conversationsMap.values());
-  const cacheKey = `createur_convs_cache_${userId}`;
+  const cacheKey = `oppi_convs_cache_${userId}`;
 
   // Cache conversations in localStorage for offline resilience
   if (typeof localStorage !== 'undefined') {
@@ -732,7 +732,7 @@ export const getMessages = async (userId1, userId2) => {
   }
 
   const pairKey = [userId1, userId2].sort().join('_');
-  const cacheKey = `createur_msgs_cache_${pairKey}`;
+  const cacheKey = `oppi_msgs_cache_${pairKey}`;
 
   const { data, error } = await supabase
     .from('messages')
@@ -858,7 +858,7 @@ export const sendMessage = async (senderId, receiverId, text) => {
   if (data && data[0] && typeof localStorage !== 'undefined') {
     try {
       const pairKey = [senderId, receiverId].sort().join('_');
-      const cacheKey = `createur_msgs_cache_${pairKey}`;
+      const cacheKey = `oppi_msgs_cache_${pairKey}`;
       const raw = localStorage.getItem(cacheKey);
       const existing = raw ? JSON.parse(raw) : [];
       if (!existing.some(m => m.id === data[0].id)) {
@@ -904,7 +904,7 @@ export const subscribeToMessages = (userId, callback) => {
   // Also listen to local dev BroadcastChannel on localhost
   let localBc = null;
   if (typeof BroadcastChannel !== 'undefined') {
-    localBc = new BroadcastChannel('createur_chat_channel');
+    localBc = new BroadcastChannel('oppi_chat_channel');
     localBc.onmessage = (event) => {
       if (event.data?.type === 'NEW_MESSAGE' && event.data?.message) {
         const msg = event.data.message;

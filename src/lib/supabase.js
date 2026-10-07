@@ -14,7 +14,7 @@ export const supabase = supabaseUrl && supabaseAnonKey
         autoRefreshToken: true,
         persistSession: true,
         detectSessionInUrl: true,
-        storageKey: 'createur_dz_auth_session'
+        storageKey: 'oppi_dz_auth_session'
       }
     }) 
   : null

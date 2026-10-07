@@ -1,7 +1,7 @@
 export const translations = {
   ar: {
     // ─── Header ───
-    brand: 'Créateur DZ',
+    brand: 'OPPI',
     login: 'تسجيل الدخول',
     signup: 'إنشاء حساب',
     logout: 'خروج',
@@ -257,7 +257,7 @@ export const translations = {
     paymentPartners: 'طرق الدفع المتاحة',
 
     // ─── Footer ───
-    footerAbout: 'Créateur DZ هي المنصة الرائدة لربط صنّاع المحتوى الجزائريين بالعلامات التجارية.',
+    footerAbout: 'OPPI هي المنصة الرائدة لربط صنّاع المحتوى الجزائريين بالعلامات التجارية.',
     footerLinks: 'روابط سريعة',
     footerContact: 'تواصل معنا',
     footerRights: 'جميع الحقوق محفوظة',
@@ -305,7 +305,7 @@ export const translations = {
   },
   fr: {
     // ─── Header ───
-    brand: 'Créateur DZ',
+    brand: 'OPPI',
     login: 'Connexion',
     signup: 'S\'inscrire',
     logout: 'Déconnexion',
@@ -561,7 +561,7 @@ export const translations = {
     paymentPartners: 'Méthodes de paiement',
 
     // ─── Footer ───
-    footerAbout: 'Créateur DZ est la plateforme leader connectant les créateurs de contenu algériens avec les marques.',
+    footerAbout: 'OPPI est la plateforme leader connectant les créateurs de contenu algériens avec les marques.',
     footerLinks: 'Liens Rapides',
     footerContact: 'Nous Contacter',
     footerRights: 'Tous droits réservés',
@@ -609,7 +609,7 @@ export const translations = {
   },
   en: {
     // ─── Header ───
-    brand: 'Créateur DZ',
+    brand: 'OPPI',
     login: 'Login',
     signup: 'Sign Up',
     logout: 'Logout',
@@ -865,7 +865,7 @@ export const translations = {
     paymentPartners: 'Payment Methods',
 
     // ─── Footer ───
-    footerAbout: 'Créateur DZ is the leading platform connecting Algerian content creators with brands.',
+    footerAbout: 'OPPI is the leading platform connecting Algerian content creators with brands.',
     footerLinks: 'Quick Links',
     footerContact: 'Contact Us',
     footerRights: 'All rights reserved',

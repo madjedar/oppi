@@ -1,5 +1,5 @@
 /**
- * Input Validation & Sanitization Engine for Créateur DZ
+ * Input Validation & Sanitization Engine for OPPI
  * Tailored for the Algerian market (Phone numbers, BaridiMob/CCP RIPs, DZD Currency)
  */
 
