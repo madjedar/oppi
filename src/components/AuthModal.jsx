@@ -176,7 +176,10 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login', initialRole = 'crea
         const { data, error: signupError } = await supabase.auth.signUp({ 
           email: email.trim(), 
           password, 
-          options: { data: { full_name: fullName, role } } 
+          options: { 
+            data: { full_name: fullName, role },
+            emailRedirectTo: window.location.origin
+          } 
         });
         if (signupError) throw signupError;
         

@@ -10,7 +10,10 @@ import AnalyticsProvider from './components/AnalyticsProvider'
 
 // Simple routing based on pathname for the SPA
 const currentPath = window.location.pathname;
-const isRoot = currentPath === '/';
+const isRoot = currentPath === '/' || 
+               currentPath === '/index.html' || 
+               window.location.search.length > 0 || 
+               window.location.hash.length > 0;
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
