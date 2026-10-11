@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import { canAccessAdmin } from '../utils/authGuards';
 import { formatDZD } from '../services/chargilyService';
 import { supabase } from '../lib/supabase';
+import { getLocalizedStatus } from '../utils/localized';
 
 export default function AdminDashboardModal({ isOpen, onClose }) {
   const { user } = useAuth();
@@ -38,51 +39,71 @@ export default function AdminDashboardModal({ isOpen, onClose }) {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const { getCampaigns } = await import('../services/dbService');
-        const [usersRes, allCamps, appsRes] = await Promise.all([
-          supabase.from('profiles').select('*').order('created_at', { ascending: false }),
-          getCampaigns(true).catch(() => []),
-          supabase.from('applications').select('*, campaign:campaigns(*), creator:profiles!applications_creator_id_fkey(full_name)').order('created_at', { ascending: false }),
+        const { getAllUsersAdmin, getAllCampaignsAdmin, getAllApplicationsAdmin } = await import('../services/dbService');
+        const [userData, campaignData, appData] = await Promise.all([
+          getAllUsersAdmin(),
+          getAllCampaignsAdmin(),
+          getAllApplicationsAdmin()
         ]);
-        if (usersRes.data) setUsers(usersRes.data);
-        if (allCamps) setCampaigns(allCamps);
-        if (appsRes.data) setApplications(appsRes.data);
+        setUsers(userData || []);
+        setCampaigns(campaignData || []);
+        setApplications(appData || []);
       } catch (err) {
-        console.error('Admin fetch error:', err);
+        console.error('Error fetching admin data:', err);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
+
     fetchData();
-  }, [isOpen]);
+  }, [isOpen, user, onClose]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !canAccessAdmin(user)) return null;
 
-  // Compute real stats
+  // Overview Stats
   const creatorCount = users.filter(u => u.role === 'creator').length;
   const brandCount = users.filter(u => u.role === 'brand').length;
-  const activeCampaignCount = campaigns.length;
   const totalBudget = campaigns.reduce((sum, c) => sum + (Number(c.budget) || 0), 0);
-  const platformRevenue = Math.round(totalBudget * 0.05); // 5% platform fee
+  const platformRevenue = Math.round(totalBudget * 0.10); // 10% platform fee calculation
 
-  // Admin actions (persist to Supabase)
   const handleVerifyUser = async (id) => {
-    const { error } = await supabase.from('profiles').update({ is_verified: true }).eq('id', id);
-    if (!error) setUsers(prev => prev.map(u => u.id === id ? { ...u, is_verified: true } : u));
+    const { verifyUserAdmin } = await import('../services/dbService');
+    try {
+      await verifyUserAdmin(id);
+      setUsers(prev => prev.map(u => u.id === id ? { ...u, is_verified: true } : u));
+    } catch (err) {
+      console.error('Error verifying user:', err);
+    }
   };
 
   const handleSuspendUser = async (id) => {
-    const { error } = await supabase.from('profiles').update({ role: 'suspended' }).eq('id', id);
-    if (!error) setUsers(prev => prev.filter(u => u.id !== id));
+    const { suspendUserAdmin } = await import('../services/dbService');
+    try {
+      await suspendUserAdmin(id);
+      setUsers(prev => prev.map(u => u.id === id ? { ...u, is_verified: false } : u));
+    } catch (err) {
+      console.error('Error suspending user:', err);
+    }
   };
 
   const handleApproveCampaign = async (id) => {
-    const { error } = await supabase.from('campaigns').update({ status: 'active' }).eq('id', id);
-    if (!error) setCampaigns(prev => prev.map(c => c.id === id ? { ...c, status: 'active' } : c));
+    const { updateCampaignStatus } = await import('../services/dbService');
+    try {
+      await updateCampaignStatus(id, 'active');
+      setCampaigns(prev => prev.map(c => c.id === id ? { ...c, status: 'active' } : c));
+    } catch (err) {
+      console.error('Error approving campaign:', err);
+    }
   };
 
   const handleRejectCampaign = async (id) => {
-    const { error } = await supabase.from('campaigns').delete().eq('id', id);
-    if (!error) setCampaigns(prev => prev.filter(c => c.id !== id));
+    const { updateCampaignStatus } = await import('../services/dbService');
+    try {
+      await updateCampaignStatus(id, 'rejected');
+      setCampaigns(prev => prev.map(c => c.id === id ? { ...c, status: 'rejected' } : c));
+    } catch (err) {
+      console.error('Error rejecting campaign:', err);
+    }
   };
 
   const handleCompleteApplication = async (id) => {
@@ -96,7 +117,7 @@ export default function AdminDashboardModal({ isOpen, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-brand-brown/40 backdrop-blur-sm overflow-y-auto" dir="rtl">
+    <div className="fixed inset-0 z-50 bg-brand-brown/40 backdrop-blur-sm overflow-y-auto" dir={language === 'ar' ? 'rtl' : 'ltr'}>
       {/* Header Bar */}
       <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b border-brand-border px-4 sm:px-8 py-5 flex justify-between items-center shadow-sm">
         <div className="flex items-center gap-4">
@@ -105,16 +126,17 @@ export default function AdminDashboardModal({ isOpen, onClose }) {
           </div>
           <div>
             <h1 className="text-2xl font-black text-brand-brown flex items-center gap-3">
-              لوحة الإدارة والأدمن (Admin Control)
+              {t('adminOverviewTitle')}
               <span className="px-3 py-1 rounded-full bg-brand-cream text-brand-orange text-xs font-bold border border-brand-orange/30">Admin</span>
             </h1>
-            <p className="text-sm font-medium text-brand-brownLight">إدارة المستخدمين والحملات والصفقات المالية للمنصة</p>
+            <p className="text-sm font-medium text-brand-brownLight">{t('adminOverviewSub')}</p>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
           <button 
             onClick={onClose}
+            aria-label={t('close')}
             className="p-3 text-brand-brownLight hover:text-brand-orange hover:bg-brand-cream rounded-full transition-colors"
           >
             <X className="w-6 h-6" />
@@ -152,7 +174,7 @@ export default function AdminDashboardModal({ isOpen, onClose }) {
         </div>
 
         {loading && (
-          <div className="text-center py-12 text-slate-400 text-sm">جاري التحميل...</div>
+          <div className="text-center py-12 text-slate-400 text-sm">{t('loading')}</div>
         )}
 
         {/* Tab 1: Overview */}
@@ -189,29 +211,29 @@ export default function AdminDashboardModal({ isOpen, onClose }) {
             
             <div className="bg-white border border-brand-border rounded-[24px] overflow-hidden shadow-sm">
               <div className="overflow-x-auto">
-                <table className="w-full text-sm text-right">
+                <table className={`w-full text-sm ${language === 'ar' ? 'text-right' : 'text-left'}`}>
                   <thead className="bg-brand-cream/50 text-brand-brownLight border-b border-brand-border">
                     <tr>
-                      <th className="px-6 py-4 font-bold">الاسم</th>
-                      <th className="px-6 py-4 font-bold">الدور</th>
-                      <th className="px-6 py-4 font-bold">البريد</th>
-                      <th className="px-6 py-4 font-bold">الحالة</th>
-                      <th className="px-6 py-4 font-bold text-center">إجراءات</th>
+                      <th className="px-6 py-4 font-bold">{t('adminColName')}</th>
+                      <th className="px-6 py-4 font-bold">{t('adminColRole')}</th>
+                      <th className="px-6 py-4 font-bold">{t('adminColEmail')}</th>
+                      <th className="px-6 py-4 font-bold">{t('adminColStatus')}</th>
+                      <th className="px-6 py-4 font-bold text-center">{t('adminColActions')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-brand-border">
                     {users.map((userItem) => (
                       <tr key={userItem.id} className="hover:bg-[#FAFAFA] transition-colors">
-                        <td className="px-6 py-4 text-brand-brown font-bold">{userItem.full_name || userItem.brand_name || 'بدون اسم'}</td>
+                        <td className="px-6 py-4 text-brand-brown font-bold">{userItem.full_name || userItem.brand_name || t('unnamedUser')}</td>
                         <td className="px-6 py-4 font-medium text-brand-brownLight">
-                          {userItem.role === 'creator' ? 'صانع محتوى' : userItem.role === 'brand' ? 'متجر' : userItem.role || '—'}
+                          {userItem.role === 'creator' ? t('roleCreator') : userItem.role === 'brand' ? t('roleBrand') : userItem.role || '—'}
                         </td>
                         <td className="px-6 py-4 text-brand-brownLight text-xs font-mono font-medium" dir="ltr">{userItem.id?.slice(0, 8)}...</td>
                         <td className="px-6 py-4">
                           <span className={`px-3 py-1 rounded-full text-xs font-bold border ${
                             userItem.is_verified ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-brand-cream text-brand-orange border-brand-orange/30'
                           }`}>
-                            {userItem.is_verified ? t('verified') : 'قيد الانتظار'}
+                            {userItem.is_verified ? t('verified') : t('pendingReview')}
                           </span>
                         </td>
                         <td className="px-6 py-4 flex items-center justify-center gap-2">
@@ -230,20 +252,20 @@ export default function AdminDashboardModal({ isOpen, onClose }) {
         {/* Tab 3: Campaigns */}
         {!loading && activeTab === 'campaigns' && (
           <div className="space-y-6 animate-fade-in">
-            <h3 className="text-2xl font-black text-brand-brown tracking-wide mb-6">{t('adminCampaigns')} Moderation</h3>
+            <h3 className="text-2xl font-black text-brand-brown tracking-wide mb-6">{t('adminCampaigns')}</h3>
             <div className="grid gap-4">
               {campaigns.length === 0 ? (
-                <p className="text-brand-brownLight font-medium text-center py-8">لا توجد حملات بعد</p>
+                <p className="text-brand-brownLight font-medium text-center py-8">{t('noCampaignsYet')}</p>
               ) : (
                 campaigns.map((camp) => (
                   <div key={camp.id} className="bg-white border border-brand-border rounded-[24px] shadow-sm p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                     <div>
                       <h4 className="text-lg font-bold text-brand-brown tracking-wide">{camp.title}</h4>
-                      <p className="text-sm font-medium text-brand-brownLight mt-1">من: <span className="font-bold">{camp.brand?.brand_name || camp.brand?.full_name || 'متجر'}</span> | {t('budget')}: <span className="font-mono font-bold">{formatDZD(camp.budget, language)}</span></p>
+                      <p className="text-sm font-medium text-brand-brownLight mt-1">{t('fromLabel')}: <span className="font-bold">{camp.brand?.brand_name || camp.brand?.full_name || t('roleBrand')}</span> | {t('budget')}: <span className="font-mono font-bold">{formatDZD(camp.budget, language)}</span></p>
                       <span className={`inline-block mt-3 px-3 py-1.5 rounded-full text-xs font-bold border ${
                         camp.status === 'active' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-brand-cream text-brand-orange border-brand-orange/30'
                       }`}>
-                        {camp.status === 'active' ? 'نشطة' : camp.status || 'قيد المراجعة'}
+                        {getLocalizedStatus(camp.status, language)}
                       </span>
                     </div>
                     <div className="flex gap-3">
@@ -262,17 +284,17 @@ export default function AdminDashboardModal({ isOpen, onClose }) {
         {/* Tab 4: Financial (Applications as Escrow) */}
         {!loading && activeTab === 'financial' && (
           <div className="space-y-6 animate-fade-in">
-            <h3 className="text-2xl font-black text-brand-brown tracking-wide mb-6">{t('adminEscrow')} Control</h3>
+            <h3 className="text-2xl font-black text-brand-brown tracking-wide mb-6">{t('adminEscrow')}</h3>
             <div className="bg-white border border-brand-border rounded-[24px] overflow-hidden shadow-sm">
               <div className="overflow-x-auto">
-                <table className="w-full text-sm text-right">
+                <table className={`w-full text-sm ${language === 'ar' ? 'text-right' : 'text-left'}`}>
                   <thead className="bg-brand-cream/50 text-brand-brownLight border-b border-brand-border">
                     <tr>
-                      <th className="px-6 py-4 font-bold">الحملة</th>
-                      <th className="px-6 py-4 font-bold">صانع المحتوى</th>
+                      <th className="px-6 py-4 font-bold">{t('adminColCampaign')}</th>
+                      <th className="px-6 py-4 font-bold">{t('adminColCreator')}</th>
                       <th className="px-6 py-4 font-bold">{t('walletAmountCol')}</th>
                       <th className="px-6 py-4 font-bold">{t('walletStatus')}</th>
-                      <th className="px-6 py-4 font-bold text-center">إجراءات</th>
+                      <th className="px-6 py-4 font-bold text-center">{t('adminColActions')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-brand-border">
@@ -285,20 +307,20 @@ export default function AdminDashboardModal({ isOpen, onClose }) {
                           <span className={`px-3 py-1.5 rounded-full text-xs font-bold border ${
                             app.status === 'approved' ? 'bg-brand-cream text-brand-orange border-brand-orange/30' : 'bg-emerald-50 text-emerald-600 border-emerald-200'
                           }`}>
-                            {app.status === 'approved' ? 'في الضمان' : 'مكتمل ومحرر'}
+                            {getLocalizedStatus(app.status === 'approved' ? 'escrow_funded' : app.status, language)}
                           </span>
                         </td>
                         <td className="px-6 py-4 flex items-center justify-center gap-2">
                           {app.status === 'approved' ? (
-                            <button onClick={() => handleCompleteApplication(app.id)} className="text-emerald-600 hover:text-emerald-700 px-4 py-2 bg-emerald-50 rounded-full font-bold text-xs border border-emerald-200">تحرير الأموال</button>
+                            <button onClick={() => handleCompleteApplication(app.id)} className="text-emerald-600 hover:text-emerald-700 px-4 py-2 bg-emerald-50 rounded-full font-bold text-xs border border-emerald-200">{t('adminReleaseFunds')}</button>
                           ) : (
-                            <span className="text-brand-brownLight font-medium text-xs">مكتمل</span>
+                            <span className="text-brand-brownLight font-medium text-xs">{t('completedStatus')}</span>
                           )}
                         </td>
                       </tr>
                     ))}
                     {applications.filter(a => a.status === 'approved' || a.status === 'completed').length === 0 && (
-                      <tr><td colSpan="5" className="px-6 py-8 text-center text-brand-brownLight font-medium">لا توجد صفقات بعد</td></tr>
+                      <tr><td colSpan="5" className="px-6 py-8 text-center text-brand-brownLight font-medium">{t('noDealsYet')}</td></tr>
                     )}
                   </tbody>
                 </table>

@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
-import { getLocalizedItem } from '../utils/localized';
+import { getLocalizedCategory, getLocalizedStatus, getLocalizedWilaya, CATEGORIES_MAP } from '../utils/localized';
 import { formatDZD, calculateFees } from '../services/chargilyService';
 import { validateCampaignForm, validateChatMessage, validateAlgerianPhone, validateUrl, sanitizeText, safeHref } from '../utils/validators';
 import OptimizedImage from './OptimizedImage';
@@ -28,7 +28,6 @@ export default function BrandDashboardModal({
   const [applications, setApplications] = useState([]);
   const [campaigns, setCampaigns] = useState([]);
   const [allCreators, setAllCreators] = useState([]);
-  const [loadingData, setLoadingData] = useState(false);
   const [activeCampaignFilter, setActiveCampaignFilter] = useState('all');
 
   // Review Modal State
@@ -48,10 +47,10 @@ export default function BrandDashboardModal({
   // New / Edit Campaign Form State
   const [campaignForm, setCampaignForm] = useState({
     title: '',
-    category: 'تكنولوجيا',
+    category: 'tech',
     budget: '',
     description: '',
-    deliverables: 'منشور إنستغرام, قصة (Story), فيديو ريلز',
+    deliverables: 'Instagram Post, Instagram Story, Instagram Reel',
     deadline: ''
   });
   const [campaignSuccessMsg, setCampaignSuccessMsg] = useState('');
@@ -60,18 +59,18 @@ export default function BrandDashboardModal({
   // Brand Profile State
   const [profileData, setProfileData] = useState({
     brandName: user?.profile?.brand_name || user?.profile?.full_name || user?.user_metadata?.full_name || '',
-    sector: user?.profile?.sector || 'تجارة إلكترونية وموضة',
+    sector: user?.profile?.sector || 'ecommerce',
     bio: user?.profile?.bio || '',
     websiteUrl: user?.profile?.website_url || '',
     phone: user?.profile?.phone || '',
-    wilaya: user?.profile?.wilaya || 'الجزائر',
+    wilaya: user?.profile?.wilaya || '16',
     rcNumber: user?.profile?.rc_number || ''
   });
   const [savedSuccess, setSavedSuccess] = useState(false);
 
   // Search & Filters for Creators Directory
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('الكل');
+  const [selectedCategory, setSelectedCategory] = useState('all');
 
   // Chat State
   const [chatMessage, setChatMessage] = useState('');
@@ -150,11 +149,11 @@ export default function BrandDashboardModal({
     if (user?.profile) {
       setProfileData({
         brandName: user.profile.brand_name || user.profile.full_name || '',
-        sector: user.profile.sector || 'تجارة إلكترونية وموضة',
+        sector: user.profile.sector || 'ecommerce',
         bio: user.profile.bio || '',
         websiteUrl: user.profile.website_url || '',
         phone: user.profile.phone || '',
-        wilaya: user.profile.wilaya || 'الجزائر',
+        wilaya: user.profile.wilaya || '16',
         rcNumber: user.profile.rc_number || ''
       });
     }
@@ -287,7 +286,7 @@ export default function BrandDashboardModal({
         setCampaigns(prev => prev.map(c => 
           c.id === editingCampaignId ? { ...c, ...campaignForm, title: sanitizedTitle, description: sanitizedDesc, budget: budgetNum } : c
         ));
-        setCampaignSuccessMsg(t('updateCampaignSuccess') || 'تم تحديث بيانات الحملة بنجاح!');
+        setCampaignSuccessMsg(t('updateCampaignSuccess'));
       } else {
         // Create New Campaign
         const brandId = user?.id || user?.profile?.id || '196f2255-a271-4ba3-9f8b-8c71a586acb4';
@@ -306,7 +305,7 @@ export default function BrandDashboardModal({
         if (createdItem) {
           setCampaigns(prev => [createdItem, ...prev.filter(c => c.id !== createdItem.id)]);
         }
-        setCampaignSuccessMsg('تم نشر الحملة بنجاح في السوق! 🎉');
+        setCampaignSuccessMsg(t('campaignPublishedSuccess'));
       }
 
       setTimeout(() => {
@@ -314,17 +313,17 @@ export default function BrandDashboardModal({
         setEditingCampaignId(null);
         setCampaignForm({
           title: '',
-          category: 'تكنولوجيا',
+          category: 'tech',
           budget: '',
           description: '',
-          deliverables: 'منشور إنستغرام, قصة (Story), فيديو ريلز',
+          deliverables: 'Instagram Post, Instagram Story, Instagram Reel',
           deadline: ''
         });
         setActiveTab('overview');
       }, 1500);
     } catch (err) {
       console.error('Error saving campaign:', err);
-      setCampaignErrorMsg(err.message || 'حدث خطأ أثناء حفظ الحملة');
+      setCampaignErrorMsg(err.message || t('campaignSaveError'));
     }
   };
 
@@ -332,10 +331,10 @@ export default function BrandDashboardModal({
     setEditingCampaignId(camp.id);
     setCampaignForm({
       title: camp.title || '',
-      category: camp.category || 'تكنولوجيا',
+      category: camp.category || 'tech',
       budget: camp.budget || '',
       description: camp.description || '',
-      deliverables: typeof camp.deliverables === 'string' ? camp.deliverables : (Array.isArray(camp.deliverables) ? camp.deliverables.join(', ') : 'منشور إنستغرام, فيديو ريلز'),
+      deliverables: typeof camp.deliverables === 'string' ? camp.deliverables : (Array.isArray(camp.deliverables) ? camp.deliverables.join(', ') : 'Instagram Post, Instagram Reel'),
       deadline: camp.deadline || ''
     });
     setActiveTab('create');
@@ -353,7 +352,7 @@ export default function BrandDashboardModal({
   };
 
   const handleDeleteCampaign = async (campaignId) => {
-    if (!window.confirm(t('confirmDeleteCampaign') || 'هل أنت متأكد من رغبتك في حذف هذه الحملة؟')) return;
+    if (!window.confirm(t('confirmDeleteCampaignMsg'))) return;
     try {
       const { deleteCampaign } = await import('../services/dbService');
       await deleteCampaign(campaignId);
@@ -395,7 +394,7 @@ export default function BrandDashboardModal({
       setReviewModal({
         isOpen: true,
         creatorId: app.creator_id,
-        creatorName: app.creator?.full_name || 'صانع المحتوى',
+        creatorName: app.creator?.full_name || t('roleCreator'),
         rating: 5,
         reviewText: '',
         submitting: false,
@@ -478,7 +477,7 @@ export default function BrandDashboardModal({
 
     const msgCheck = validateChatMessage(chatMessage);
     if (!msgCheck.isValid) {
-      setChatError(msgCheck.error || 'الرسالة غير صالحة');
+      setChatError(msgCheck.error || t('invalidDataAlert'));
       return;
     }
 
@@ -529,7 +528,7 @@ export default function BrandDashboardModal({
       // Remove optimistic message and show error in UI
       setMessages(prev => prev.filter(m => m.id !== optimisticMsg.id));
       setChatMessage(msgText); // restore text so user can retry
-      setChatError(`خطأ: ${err?.message || err?.code || 'فشل إرسال الرسالة'} — Code: ${err?.code || 'unknown'}`);
+      setChatError(`${t('errorMessage')}: ${err?.message || err?.code || ''}`);
     }
   };
 
@@ -543,7 +542,7 @@ export default function BrandDashboardModal({
       if (conv?.id) {
         contactsMap.set(conv.id, {
           id: conv.id,
-          full_name: conv.full_name || 'صانع محتوى',
+          full_name: conv.full_name || t('roleCreator'),
           avatar_url: conv.avatar_url || '',
           category: conv.category || '',
           wilaya: conv.wilaya || '',
@@ -560,12 +559,12 @@ export default function BrandDashboardModal({
         if (!contactsMap.has(app.creator_id)) {
           contactsMap.set(app.creator_id, {
             id: app.creator_id,
-            full_name: app.creator.full_name || 'صانع محتوى',
+            full_name: app.creator.full_name || t('roleCreator'),
             avatar_url: app.creator.avatar_url || '',
             category: app.creator.category || '',
             wilaya: app.creator.wilaya || '',
             is_verified: Boolean(app.creator.is_verified),
-            lastMessage: 'متقدم على حملة',
+            lastMessage: t('applicantOnCampaignMsg'),
             lastMessageAt: app.created_at
           });
         }
@@ -579,30 +578,30 @@ export default function BrandDashboardModal({
       if (foundInAll) {
         contactsMap.set(targetContactId, {
           id: targetContactId,
-          full_name: foundInAll.full_name || foundInAll.name || 'صانع محتوى',
+          full_name: foundInAll.full_name || foundInAll.name || t('roleCreator'),
           avatar_url: foundInAll.avatar_url || foundInAll.avatar || '',
           category: foundInAll.category || '',
           wilaya: foundInAll.wilaya || '',
           is_verified: Boolean(foundInAll.is_verified),
-          lastMessage: 'محادثة جديدة',
+          lastMessage: t('newConversationMsg'),
           lastMessageAt: new Date().toISOString()
         });
       } else if (activeContactProfile && activeContactProfile.id === targetContactId) {
         contactsMap.set(targetContactId, {
           id: targetContactId,
-          full_name: activeContactProfile.full_name || activeContactProfile.name || 'صانع محتوى',
+          full_name: activeContactProfile.full_name || activeContactProfile.name || t('roleCreator'),
           avatar_url: activeContactProfile.avatar_url || '',
           category: activeContactProfile.category || '',
           wilaya: activeContactProfile.wilaya || '',
           is_verified: Boolean(activeContactProfile.is_verified),
-          lastMessage: 'محادثة جديدة',
+          lastMessage: t('newConversationMsg'),
           lastMessageAt: new Date().toISOString()
         });
       }
     }
 
     return Array.from(contactsMap.values());
-  }, [conversations, applications, allCreators, selectedContactId, initialContactId, activeContactProfile]);
+  }, [conversations, applications, allCreators, selectedContactId, initialContactId, activeContactProfile, t]);
 
   // Active selected contact details
   const selectedContact = useMemo(() => {
@@ -625,7 +624,7 @@ export default function BrandDashboardModal({
   // ─── Filtered Creators for Directory ───
   const filteredCreators = allCreators.filter(c => {
     const creatorName = c.full_name || c.username || '';
-    const matchCat = selectedCategory === 'الكل' || c.category === selectedCategory;
+    const matchCat = selectedCategory === 'all' || c.category === selectedCategory || CATEGORIES_MAP[selectedCategory]?.[language] === c.category || CATEGORIES_MAP[selectedCategory]?.ar === c.category;
     const matchSearch = searchQuery === '' || 
       creatorName.toLowerCase().includes(searchQuery.toLowerCase()) || 
       (c.bio && c.bio.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -645,7 +644,7 @@ export default function BrandDashboardModal({
       role="dialog"
       aria-modal="true"
       aria-labelledby="brand-dashboard-title"
-      dir="rtl"
+      dir={language === 'ar' ? 'rtl' : 'ltr'}
     >
       {/* ─── Top Header Bar ─── */}
       <div className="sticky top-0 z-20 bg-white border-b border-brand-border px-4 sm:px-8 py-4 flex justify-between items-center shadow-sm">
@@ -659,11 +658,11 @@ export default function BrandDashboardModal({
                 {profileData.brandName || t('brandDashboard')}
               </h2>
               <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-brand-orange/10 text-brand-orange border border-brand-orange/20">
-                {profileData.sector}
+                {getLocalizedCategory(profileData.sector, language) || profileData.sector}
               </span>
             </div>
             <p className="text-xs font-medium text-brand-brownLight mt-0.5">
-              {t('welcomeUser')}، {user?.profile?.full_name || user?.user_metadata?.full_name || 'صاحب المتجر'}
+              {t('welcomeUser')}, {user?.profile?.full_name || user?.user_metadata?.full_name || t('roleBrand')}
             </p>
           </div>
         </div>
@@ -673,7 +672,7 @@ export default function BrandDashboardModal({
             type="button"
             onClick={onClose}
             className="p-2.5 text-brand-brownLight hover:text-brand-orange hover:bg-brand-orange/10 rounded-full transition-all"
-            aria-label="إغلاق لوحة تحكم المتجر"
+            aria-label={t('close')}
             title={t('close')}
           >
             <X className="w-6 h-6" aria-hidden="true" />
@@ -691,12 +690,12 @@ export default function BrandDashboardModal({
             { id: 'create', label: editingCampaignId ? t('editCampaign') : t('addCampaign'), icon: PlusCircle },
             { 
               id: 'applicants', 
-              label: t('campaignApplicants') || 'طلبات المتقدمين', 
+              label: t('campaignApplicants'), 
               icon: Users, 
               badge: pendingApplications.length > 0 ? pendingApplications.length : null 
             },
             { id: 'creators', label: t('creatorDirectory'), icon: Search },
-            { id: 'messages', label: 'المحادثات', icon: MessageSquare },
+            { id: 'messages', label: t('navMessages'), icon: MessageSquare },
             { 
               id: 'escrow', 
               label: t('escrowDeals'), 
@@ -753,9 +752,7 @@ export default function BrandDashboardModal({
                 <p className="text-xs font-medium text-brand-brownLight mt-2 flex items-center gap-1">
                   <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
                   <span>
-                    {totalHiredBudget > 0 
-                      ? 'في صفقات الضمان النشطة والمنجزة' 
-                      : (totalCampaignsBudget > 0 ? 'ميزانية مرصودة للحملات المعلنة' : 'عبر بريدي موب، الذهبية و CIB')}
+                    {totalHiredBudget > 0 ? t('inActiveCompletedEscrow') : (totalCampaignsBudget > 0 ? t('budgetAllocatedForCampaigns') : t('transferredViaCards'))}
                   </span>
                 </p>
               </div>
@@ -771,11 +768,11 @@ export default function BrandDashboardModal({
                 <div className="text-2xl sm:text-3xl font-black text-brand-brown font-mono">
                   {activeCampaignsList.length}{' '}
                   <span className="text-sm font-bold text-brand-brownLight">
-                    {language === 'ar' ? (activeCampaignsList.length === 1 ? 'حملة' : 'حملات') : (language === 'fr' ? 'campagnes' : 'campaigns')}
+                    {t('campaignsUnit')}
                   </span>
                 </div>
                 <p className="text-xs font-medium text-emerald-600 mt-2">
-                  {activeCampaignsList.length > 0 ? 'تستقبل طلبات المبدعين حالياً' : 'أضف حملة جديدة لبدء التوظيف'}
+                  {activeCampaignsList.length > 0 ? t('receivingCreatorApplications') : t('addCampaignToStartHiring')}
                 </p>
               </div>
 
@@ -790,16 +787,16 @@ export default function BrandDashboardModal({
                 <div className="text-2xl sm:text-3xl font-black text-brand-brown font-mono">
                   {uniqueHiredCreatorsCount}{' '}
                   <span className="text-sm font-bold text-brand-brownLight">
-                    {language === 'ar' ? (uniqueHiredCreatorsCount === 1 ? 'صانع محتوى' : 'صنّاع محتوى') : (language === 'fr' ? 'créateurs' : 'creators')}
+                    {t('creatorUnit')}
                   </span>
                 </div>
-                <p className="text-xs font-medium text-brand-brownLight mt-2">في صفقات الضمان النشطة والمنجزة</p>
+                <p className="text-xs font-medium text-brand-brownLight mt-2">{t('inActiveCompletedEscrow')}</p>
               </div>
 
               {/* Stat 4: Pending Applicants */}
               <div className="bg-white border border-brand-border rounded-[24px] p-6 shadow-sm hover:shadow-md transition-shadow">
                 <div className="flex justify-between items-start mb-3">
-                  <span className="text-brand-brownLight text-sm font-bold">طلبات بانتظار المراجعة</span>
+                  <span className="text-brand-brownLight text-sm font-bold">{t('requestsAwaitingReview')}</span>
                   <div className="p-2.5 bg-amber-50 text-amber-600 rounded-[14px] border border-amber-100">
                     <Clock className="w-5 h-5" />
                   </div>
@@ -807,11 +804,11 @@ export default function BrandDashboardModal({
                 <div className="text-2xl sm:text-3xl font-black text-amber-600 font-mono">
                   {pendingApplications.length}{' '}
                   <span className="text-sm font-bold text-brand-brownLight">
-                    {language === 'ar' ? (pendingApplications.length === 1 ? 'طلب' : 'طلبات') : (language === 'fr' ? 'demandes' : 'applicants')}
+                    {t('applicantsLabel')}
                   </span>
                 </div>
                 <p className="text-xs font-medium text-amber-600 mt-2">
-                  {pendingApplications.length > 0 ? 'يحتاج لموافقتك وتأمين الصفقة' : 'لا توجد طلبات معلقة حالياً'}
+                  {pendingApplications.length > 0 ? t('needsApprovalAndEscrow') : t('noPendingRequestsCurrently')}
                 </p>
               </div>
             </div>
@@ -824,10 +821,10 @@ export default function BrandDashboardModal({
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                   <div>
                     <h3 className="text-xl font-black text-brand-brown tracking-wide">
-                      {t('manageCampaigns') || 'إدارة حملاتي الإعلانية'}
+                      {t('manageCampaigns')}
                     </h3>
                     <p className="text-xs font-medium text-brand-brownLight mt-0.5">
-                      تعديل، إيقاف، أو متابعة المتقدمين لكل حملة
+                      {t('activeCampaignsManageSub')}
                     </p>
                   </div>
                   <button 
@@ -835,10 +832,10 @@ export default function BrandDashboardModal({
                       setEditingCampaignId(null);
                       setCampaignForm({
                         title: '',
-                        category: 'تكنولوجيا',
+                        category: 'tech',
                         budget: '',
                         description: '',
-                        deliverables: 'منشور إنستغرام, قصة (Story), فيديو ريلز',
+                        deliverables: 'Instagram Post, Instagram Story, Instagram Reel',
                         deadline: ''
                       });
                       setActiveTab('create');
@@ -853,8 +850,8 @@ export default function BrandDashboardModal({
                 {campaigns.length === 0 ? (
                   <div className="p-8 text-center bg-brand-cream/50 rounded-[20px] border border-dashed border-brand-border">
                     <Sparkles className="w-10 h-10 text-brand-orange/60 mx-auto mb-3" />
-                    <p className="text-brand-brown font-bold text-base mb-1">لم تنشئ أي حملة إعلانية بعد</p>
-                    <p className="text-brand-brownLight text-xs mb-4">انشر حملتك الأولى واجذب نخبة صناع المحتوى في الجزائر لتسويق منتجاتك</p>
+                    <p className="text-brand-brown font-bold text-base mb-1">{t('noCampaignsCreatedYet')}</p>
+                    <p className="text-brand-brownLight text-xs mb-4">{t('noCampaignsCreatedDesc')}</p>
                     <button 
                       onClick={() => setActiveTab('create')}
                       className="btn-primary text-xs px-5 py-2.5"
@@ -883,25 +880,25 @@ export default function BrandDashboardModal({
                               <div className="flex items-center gap-2 flex-wrap">
                                 <h4 className="font-black text-brand-brown text-base">{camp.title}</h4>
                                 <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-white text-brand-brownLight border border-brand-border">
-                                  {camp.category}
+                                  {getLocalizedCategory(camp.category, language) || camp.category}
                                 </span>
                                 <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${
                                   isPaused 
                                     ? 'bg-amber-50 text-amber-700 border-amber-200' 
                                     : 'bg-emerald-50 text-emerald-700 border-emerald-200'
                                 }`}>
-                                  {isPaused ? 'متوقفة مؤقتاً' : 'نشطة وتستقبل طلبات'}
+                                  {isPaused ? t('pausedStatus') : t('activeReceivingStatus')}
                                 </span>
                               </div>
 
                               <div className="flex items-center gap-4 text-xs font-medium text-brand-brownLight flex-wrap">
-                                <span>الميزانية: <strong className="text-brand-orange font-bold font-mono">{formatDZD(camp.budget, language)}</strong></span>
+                                <span>{t('budgetLabel')} <strong className="text-brand-orange font-bold font-mono">{formatDZD(camp.budget, language)}</strong></span>
                                 <span>•</span>
-                                <span>المتقدمون: <strong className="text-brand-brown">{campApps.length} مبدع</strong> {pendingCount > 0 && <span className="text-amber-600 font-bold">({pendingCount} جديد)</span>}</span>
+                                <span>{t('applicantsLabel')} <strong className="text-brand-brown">{campApps.length} {t('creatorUnit')}</strong> {pendingCount > 0 && <span className="text-amber-600 font-bold">({pendingCount} {t('newBadge')})</span>}</span>
                                 {camp.deadline && (
                                   <>
                                     <span>•</span>
-                                    <span>آخر أجل: {camp.deadline}</span>
+                                    <span>{t('deadlineLabel')} {camp.deadline}</span>
                                   </>
                                 )}
                               </div>
@@ -915,10 +912,10 @@ export default function BrandDashboardModal({
                                   setActiveTab('applicants');
                                 }}
                                 className="btn-primary text-xs px-3.5 py-2 flex items-center gap-1.5 shadow-sm"
-                                title="عرض طلبات المبدعين"
+                                title={t('viewApplicantsTitle')}
                               >
                                 <Eye className="w-3.5 h-3.5" />
-                                <span>المتقدمون ({campApps.length})</span>
+                                <span>{t('applicants')} ({campApps.length})</span>
                               </button>
 
                               <button 
@@ -936,7 +933,7 @@ export default function BrandDashboardModal({
                                     ? 'bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100' 
                                     : 'bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-100'
                                 }`}
-                                title={isPaused ? 'استئناف النشر' : 'إيقاف مؤقت'}
+                                title={isPaused ? t('resumePosting') : t('pausePosting')}
                               >
                                 {isPaused ? <PlayCircle className="w-4 h-4" /> : <PauseCircle className="w-4 h-4" />}
                               </button>
@@ -962,22 +959,22 @@ export default function BrandDashboardModal({
                 <div>
                   <div className="flex items-center gap-3 text-brand-orange mb-3 font-black text-lg">
                     <ShieldCheck className="w-6 h-6" />
-                    <span>{t('escrowStatusTitle') || 'حالة الضمان المالي'}</span>
+                    <span>{t('escrowStatusTitle')}</span>
                   </div>
                   <p className="text-brand-brownLight font-medium text-xs mb-6 leading-relaxed">
-                    جميع ميزانيات الحملات تبقى محجوزة بحساب الضمان الشفاف ولا يتم تحويلها للمبدع حتى تراجع العمل وتوافق عليه.
+                    {t('escrowGuaranteeDesc')}
                   </p>
 
                   <div className="p-4 rounded-[18px] bg-brand-cream/80 border border-brand-border space-y-4 mb-6">
                     <div className="flex justify-between items-center text-sm font-bold text-brand-brownLight">
-                      <span>{t('escrowHeld') || 'الأموال المحجوزة:'}</span>
+                      <span>{t('escrowHeld')}</span>
                       <span className="font-black text-amber-600 font-mono text-base">
                         {formatDZD(escrowHeldAmount, language)}
                       </span>
                     </div>
                     <div className="h-px w-full bg-brand-border/60"></div>
                     <div className="flex justify-between items-center text-sm font-bold text-brand-brownLight">
-                      <span>{t('escrowReleased') || 'الأموال المحررة:'}</span>
+                      <span>{t('escrowReleased')}</span>
                       <span className="font-black text-emerald-600 font-mono text-base">
                         {formatDZD(escrowReleasedAmount, language)}
                       </span>
@@ -990,7 +987,7 @@ export default function BrandDashboardModal({
                   className="btn-primary w-full py-3.5 text-xs flex items-center justify-center gap-2 shadow-sm"
                 >
                   <Lock className="w-4 h-4" />
-                  <span>{t('manageEscrowBtn') || 'إدارة صفقات الضمان النشطة'}</span>
+                  <span>{t('activeEscrowManagementBtn')}</span>
                 </button>
               </div>
             </div>
@@ -1005,10 +1002,10 @@ export default function BrandDashboardModal({
             <div className="flex justify-between items-center mb-6 pb-4 border-b border-brand-border">
               <div>
                 <h3 className="text-2xl font-black text-brand-brown tracking-wide">
-                  {editingCampaignId ? 'تعديل الحملة الإعلانية' : 'إنشاء حملة إعلانية جديدة'}
+                  {editingCampaignId ? t('editCampaignTitle') : t('newCampaignTitle')}
                 </h3>
                 <p className="text-brand-brownLight font-medium text-xs mt-1">
-                  انشر تفاصيل حملتك وميزانيتك ليصلك التقديم من أفضل صنّاع المحتوى في الجزائر
+                  {t('publishCampaignSub')}
                 </p>
               </div>
               {editingCampaignId && (
@@ -1017,26 +1014,26 @@ export default function BrandDashboardModal({
                     setEditingCampaignId(null);
                     setCampaignForm({
                       title: '',
-                      category: 'تكنولوجيا',
+                      category: 'tech',
                       budget: '',
                       description: '',
-                      deliverables: 'منشور إنستغرام, قصة (Story), فيديو ريلز',
+                      deliverables: 'Instagram Post, Instagram Story, Instagram Reel',
                       deadline: ''
                     });
                   }}
                   className="text-xs font-bold text-brand-orange hover:underline"
                 >
-                  إلغاء التعديل
+                  {t('cancelEdit')}
                 </button>
               )}
             </div>
 
             <form onSubmit={handleSaveCampaign} className="space-y-5">
               <div>
-                <label className="block text-xs font-bold text-brand-brown mb-2">عنوان الحملة الإعلانية *</label>
+                <label className="block text-xs font-bold text-brand-brown mb-2">{t('campaignTitleAsterisk')}</label>
                 <input
                   type="text"
-                  placeholder="مثال: ترويج تشكيلة الملابس الصيفية الجديدة"
+                  placeholder={t('campaignTitlePlaceholder')}
                   className="input-field w-full"
                   value={campaignForm.title}
                   onChange={(e) => setCampaignForm({ ...campaignForm, title: e.target.value })}
@@ -1046,26 +1043,26 @@ export default function BrandDashboardModal({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-brand-brown mb-2">المجال / الفئة *</label>
+                  <label className="block text-xs font-bold text-brand-brown mb-2">{t('campaignCategoryAsterisk')}</label>
                   <select
                     className="input-field w-full"
                     value={campaignForm.category}
                     onChange={(e) => setCampaignForm({ ...campaignForm, category: e.target.value })}
                   >
-                    <option value="تكنولوجيا">تكنولوجيا وإلكترونيات</option>
-                    <option value="موضة وأزياء">موضة وأزياء</option>
-                    <option value="تجميل وعناية">تجميل وعناية</option>
-                    <option value="طبخ وأكل">طبخ وأكل</option>
-                    <option value="سفر وسياحة">سفر وسياحة</option>
-                    <option value="رياضة ولياقة">رياضة ولياقة</option>
-                    <option value="خدمات وبرمجيات">خدمات وبرمجيات</option>
-                    <option value="تأثيث وديكور">تأثيث وديكور</option>
-                    <option value="مجال آخر">مجال آخر</option>
+                    <option value="tech">{getLocalizedCategory('tech', language)}</option>
+                    <option value="fashion">{getLocalizedCategory('fashion', language)}</option>
+                    <option value="beauty">{getLocalizedCategory('beauty', language)}</option>
+                    <option value="food">{getLocalizedCategory('food', language)}</option>
+                    <option value="travel">{getLocalizedCategory('travel', language)}</option>
+                    <option value="fitness">{getLocalizedCategory('fitness', language)}</option>
+                    <option value="services">{getLocalizedCategory('services', language)}</option>
+                    <option value="decor">{getLocalizedCategory('decor', language)}</option>
+                    <option value="other">{t('sectorOther')}</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-brand-brown mb-2">الميزانية المقترحة (د.ج) *</label>
+                  <label className="block text-xs font-bold text-brand-brown mb-2">{t('campaignBudgetAsterisk')}</label>
                   <input
                     type="number"
                     placeholder="35000"
@@ -1079,10 +1076,10 @@ export default function BrandDashboardModal({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-brand-brown mb-2">التسليمات المطلوبة *</label>
+                  <label className="block text-xs font-bold text-brand-brown mb-2">{t('campaignDeliverablesAsterisk')}</label>
                   <input
                     type="text"
-                    placeholder="منشور إنستغرام, 2 ستوري, فيديو ريلز 60 ثانية"
+                    placeholder={t('campaignDeliverablesPlaceholder')}
                     className="input-field w-full"
                     value={campaignForm.deliverables}
                     onChange={(e) => setCampaignForm({ ...campaignForm, deliverables: e.target.value })}
@@ -1091,7 +1088,7 @@ export default function BrandDashboardModal({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-brand-brown mb-2">آخر أجل للتقديم (اختياري)</label>
+                  <label className="block text-xs font-bold text-brand-brown mb-2">{t('campaignDeadlineOptional')}</label>
                   <input
                     type="date"
                     className="input-field w-full font-mono"
@@ -1102,10 +1099,10 @@ export default function BrandDashboardModal({
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-brand-brown mb-2">وصف الحملة وشروط صانع المحتوى</label>
+                <label className="block text-xs font-bold text-brand-brown mb-2">{t('campaignDescLabel')}</label>
                 <textarea
                   rows={4}
-                  placeholder="اشرح طبيعة المنتج، الجمهور المستهدف، والشروط الخاصة بالمنشور..."
+                  placeholder={t('campaignDescPlaceholder')}
                   className="input-field w-full"
                   value={campaignForm.description}
                   onChange={(e) => setCampaignForm({ ...campaignForm, description: e.target.value })}
@@ -1116,15 +1113,15 @@ export default function BrandDashboardModal({
               {campaignForm.budget && Number(campaignForm.budget) > 0 && (
                 <div className="p-4 rounded-[18px] bg-brand-cream/80 border border-brand-border text-xs text-brand-brownLight font-medium space-y-2">
                   <div className="flex justify-between items-center">
-                    <span>ميزانية الحملة للمبدع:</span>
+                    <span>{t('campaignCreatorBudgetLabel')}</span>
                     <span className="font-bold text-brand-brown font-mono">{formatDZD(Number(campaignForm.budget), language)}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span>رسوم خدمة الضمان (5%):</span>
+                    <span>{t('campaignEscrowFee5Label')}</span>
                     <span className="font-bold text-emerald-600 font-mono">{formatDZD(calculateFees(Number(campaignForm.budget)).platformFee, language)}</span>
                   </div>
                   <div className="flex justify-between items-center pt-2 border-t border-brand-border text-sm font-bold text-brand-brown">
-                    <span>المجموع الإجمالي لتأمين الصفقة:</span>
+                    <span>{t('campaignTotalEscrowLabel')}</span>
                     <span className="text-brand-orange font-mono font-black">{formatDZD(calculateFees(Number(campaignForm.budget)).total, language)}</span>
                   </div>
                 </div>
@@ -1149,7 +1146,7 @@ export default function BrandDashboardModal({
                 className="btn-primary w-full py-4 font-bold text-base flex items-center justify-center gap-2 shadow-md shadow-brand-orange/20"
               >
                 <LayoutDashboard className="w-5 h-5" />
-                <span>{editingCampaignId ? 'حفظ وتحديث الحملة' : 'نشر الحملة في السوق'}</span>
+                <span>{editingCampaignId ? t('saveAndUpdateCampaign') : t('publishCampaignToMarket')}</span>
               </button>
             </form>
           </div>
@@ -1162,21 +1159,21 @@ export default function BrandDashboardModal({
           <div className="space-y-6 animate-fade-in">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
-                <h3 className="text-xl font-black text-brand-brown mb-1">طلبات التقديم من صناع المحتوى</h3>
+                <h3 className="text-xl font-black text-brand-brown mb-1">{t('applicantsHeading')}</h3>
                 <p className="text-brand-brownLight font-medium text-xs">
-                  راجع المبدعين المتقدمين لحملاتك، اتفق معهم ووظفهم مباشرة مع دفع آمن عبر حساب الضمان
+                  {t('applicantsSub')}
                 </p>
               </div>
 
               {/* Filter By Campaign Dropdown */}
               <div className="flex items-center gap-2 self-stretch sm:self-auto">
-                <span className="text-xs font-bold text-brand-brownLight whitespace-nowrap">الحملة:</span>
+                <span className="text-xs font-bold text-brand-brownLight whitespace-nowrap">{t('campaignFilterLabel')}</span>
                 <select
                   value={activeCampaignFilter}
                   onChange={(e) => setActiveCampaignFilter(e.target.value)}
                   className="input-field py-2 text-xs font-bold bg-white"
                 >
-                  <option value="all">جميع الحملات ({applications.length})</option>
+                  <option value="all">{t('allCampaignsOption')} ({applications.length})</option>
                   {campaigns.map(camp => (
                     <option key={camp.id} value={camp.id}>
                       {camp.title} ({applications.filter(a => a.campaign_id === camp.id).length})
@@ -1189,21 +1186,20 @@ export default function BrandDashboardModal({
             {filteredApplications.length === 0 ? (
               <div className="p-12 text-center bg-white rounded-[24px] border border-brand-border shadow-sm">
                 <Users className="w-12 h-12 text-brand-brownLight/40 mx-auto mb-3" />
-                <h4 className="font-bold text-brand-brown text-base mb-1">لا توجد طلبات تقديم حتى الآن</h4>
+                <h4 className="font-bold text-brand-brown text-base mb-1">{t('noApplicantsYetHeading')}</h4>
                 <p className="text-brand-brownLight text-xs max-w-md mx-auto">
-                  بمجرد أن يتقدم صناع المحتوى على حملاتك الإعلانية، ستظهر طلباتهم هنا للمراجعة والتوظيف.
+                  {t('noApplicantsYetDesc')}
                 </p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                 {filteredApplications.map((app) => {
                   const creator = app.creator || {};
-                  const creatorName = creator.full_name || creator.brand_name || 'صانع محتوى';
+                  const creatorName = creator.full_name || creator.brand_name || t('roleCreator');
                   const creatorAvatar = creator.avatar_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=creator';
                   const isPending = app.status === 'pending';
                   const isInEscrow = app.status === 'approved' || app.status === 'submitted';
                   const isCompleted = app.status === 'completed';
-                  const isRejected = app.status === 'rejected';
 
                   return (
                     <div 
@@ -1229,7 +1225,7 @@ export default function BrandDashboardModal({
                                 {creator.is_verified && <BadgeCheck className="w-4 h-4 text-brand-orange" />}
                               </h4>
                               <span className="text-[11px] font-medium text-brand-brownLight block">
-                                {creator.category || 'صانع محتوى'} • {creator.wilaya || 'الجزائر'}
+                                {getLocalizedCategory(creator.category, language) || t('roleCreator')} • {getLocalizedWilaya(creator.wilaya, language) || creator.wilaya}
                               </span>
                             </div>
                           </div>
@@ -1241,20 +1237,18 @@ export default function BrandDashboardModal({
                             isCompleted ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
                             'bg-gray-100 text-gray-600 border-gray-200'
                           }`}>
-                            {isPending ? 'قيد المراجعة ⏳' :
-                             isInEscrow ? 'في الضمان 🔒' :
-                             isCompleted ? 'مكتمل ✅' : 'مرفوض ❌'}
+                            {getLocalizedStatus(app.status, language)}
                           </span>
                         </div>
 
                         {/* Campaign Target */}
                         <div className="p-3 rounded-[16px] bg-brand-cream/60 border border-brand-border mb-4">
-                          <span className="text-[10px] font-bold text-brand-brownLight block mb-0.5">الحملة الإعلانية:</span>
+                          <span className="text-[10px] font-bold text-brand-brownLight block mb-0.5">{t('campaignApplicationsBrand')}:</span>
                           <span className="font-bold text-brand-brown text-xs block truncate">
-                            {app.campaign?.title || 'حملة إعلانية'}
+                            {app.campaign?.title || t('navCampaigns')}
                           </span>
                           <div className="flex justify-between items-center mt-2 pt-2 border-t border-brand-border/40 text-[11px] font-medium">
-                            <span className="text-brand-brownLight">الميزانية:</span>
+                            <span className="text-brand-brownLight">{t('budgetLabel')}</span>
                             <span className="font-bold text-brand-orange font-mono">
                               {formatDZD(app.campaign?.budget, language)}
                             </span>
@@ -1289,14 +1283,14 @@ export default function BrandDashboardModal({
                               className="btn-primary text-xs py-2.5 flex items-center justify-center gap-1.5 shadow-sm"
                             >
                               <CreditCard className="w-3.5 h-3.5" />
-                              <span>قبول وتأمين</span>
+                              <span>{t('acceptAndEscrow')}</span>
                             </button>
 
                             <button
                               onClick={() => handleRejectApplication(app.id)}
                               className="py-2.5 rounded-full text-xs font-bold text-red-500 bg-red-50 hover:bg-red-100 border border-red-200 transition-colors"
                             >
-                              رفض الطلب
+                              {t('rejectApplication')}
                             </button>
                           </div>
                         )}
@@ -1306,7 +1300,7 @@ export default function BrandDashboardModal({
                           className="w-full py-2 rounded-full text-xs font-bold text-brand-brown hover:text-brand-orange bg-white border border-brand-border hover:border-brand-orange/30 transition-colors flex items-center justify-center gap-1.5"
                         >
                           <MessageSquare className="w-3.5 h-3.5" />
-                          <span>مراسلة المبدع</span>
+                          <span>{t('messageCreatorFull')}</span>
                         </button>
                       </div>
                     </div>
@@ -1323,9 +1317,9 @@ export default function BrandDashboardModal({
         {activeTab === 'creators' && (
           <div className="space-y-6 animate-fade-in">
             <div>
-              <h3 className="text-xl font-black text-brand-brown mb-1">دليل وتوظيف صنّاع المحتوى</h3>
+              <h3 className="text-xl font-black text-brand-brown mb-1">{t('creatorDirectory')}</h3>
               <p className="text-brand-brownLight font-medium text-xs">
-                ابحث عن أفضل المبدعين في الجزائر، تواصل معهم ووظفهم مباشرة مع دفع آمن عبر بريدي موب، الذهبية و CIB
+                {t('creatorDirectoryIntro')}
               </p>
             </div>
 
@@ -1335,7 +1329,7 @@ export default function BrandDashboardModal({
                 <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-brownLight" />
                 <input
                   type="text"
-                  placeholder="ابحث بالاسم أو التخصص..."
+                  placeholder={t('searchCreatorPlaceholder')}
                   className="w-full bg-white border border-brand-border rounded-full pl-6 pr-11 py-2.5 text-brand-brown text-xs font-medium focus:outline-none focus:border-brand-orange transition-colors shadow-sm"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -1343,7 +1337,7 @@ export default function BrandDashboardModal({
               </div>
 
               <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-                {['الكل', 'تكنولوجيا', 'موضة وأزياء', 'تجميل وعناية', 'طبخ وأكل', 'سفر وسياحة'].map((cat) => (
+                {['all', 'tech', 'fashion', 'beauty', 'food', 'travel'].map((cat) => (
                   <button
                     key={cat}
                     onClick={() => setSelectedCategory(cat)}
@@ -1353,7 +1347,7 @@ export default function BrandDashboardModal({
                         : 'bg-white text-brand-brownLight border-brand-border hover:border-brand-orange/30 hover:text-brand-orange'
                     }`}
                   >
-                    {cat}
+                    {getLocalizedCategory(cat, language)}
                   </button>
                 ))}
               </div>
@@ -1362,7 +1356,7 @@ export default function BrandDashboardModal({
             {/* Creators Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {filteredCreators.map((creator) => {
-                const creatorName = creator.full_name || creator.username || 'صانع محتوى';
+                const creatorName = creator.full_name || creator.username || t('roleCreator');
                 const creatorAvatar = creator.avatar_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=creator';
 
                 return (
@@ -1387,24 +1381,24 @@ export default function BrandDashboardModal({
                             {creator.is_verified && <BadgeCheck className="w-4 h-4 text-brand-orange" />}
                           </h4>
                           <span className="text-xs font-medium text-brand-brownLight">
-                            {creator.category || 'صانع محتوى'} • {creator.wilaya || 'الجزائر'}
+                            {getLocalizedCategory(creator.category, language) || t('roleCreator')} • {getLocalizedWilaya(creator.wilaya, language) || creator.wilaya}
                           </span>
                         </div>
                       </div>
 
                       <p className="text-xs font-medium text-brand-brownLight line-clamp-2 mb-4 leading-relaxed">
-                        {creator.bio || 'صانع محتوى رقمي على منصات التواصل الاجتماعي.'}
+                        {creator.bio || t('digitalCreatorBioFallback')}
                       </p>
 
                       <div className="grid grid-cols-2 gap-2 mb-5 text-center">
                         <div className="p-2.5 rounded-[14px] bg-brand-cream/80 border border-brand-border">
-                          <span className="text-[10px] font-bold text-brand-brownLight block mb-0.5">التفاعل</span>
-                          <span className="font-black text-brand-brown text-xs">4.8%</span>
+                          <span className="text-[10px] font-bold text-brand-brownLight block mb-0.5">{t('dashCompletedDeals')}</span>
+                          <span className="font-black text-brand-brown text-xs font-mono">{creator.completed_deals || 0}</span>
                         </div>
                         <div className="p-2.5 rounded-[14px] bg-brand-cream/80 border border-brand-border">
                           <span className="text-[10px] font-bold text-brand-brownLight block mb-0.5">{t('creatorRate')}</span>
                           <span className="font-black text-brand-orange text-xs font-mono">
-                            {formatDZD(creator.rate_per_post || 20000, language)}
+                            {Number(creator.rate_per_post) > 0 ? formatDZD(creator.rate_per_post, language) : t('negotiablePerCampaign')}
                           </span>
                         </div>
                       </div>
@@ -1417,14 +1411,14 @@ export default function BrandDashboardModal({
                           onHireCreator({
                             id: creator.id,
                             name: creatorName,
-                            ratePerPost: creator.rate_per_post || 20000,
+                            ratePerPost: Number(creator.rate_per_post) || 0,
                             avatar: creatorAvatar
                           });
                         }}
                         className="btn-primary py-2.5 text-xs flex items-center justify-center gap-1.5 shadow-sm"
                       >
                         <CreditCard className="w-3.5 h-3.5" />
-                        <span>توظيف فوري</span>
+                        <span>{t('instantHire')}</span>
                       </button>
 
                       <button
@@ -1432,7 +1426,7 @@ export default function BrandDashboardModal({
                         className="py-2.5 rounded-full text-xs font-bold text-brand-brown hover:text-brand-orange bg-white border border-brand-border hover:border-brand-orange/30 transition-colors flex items-center justify-center gap-1"
                       >
                         <MessageSquare className="w-3.5 h-3.5" />
-                        <span>مراسلة</span>
+                        <span>{t('messageCreator')}</span>
                       </button>
                     </div>
                   </div>
@@ -1450,14 +1444,14 @@ export default function BrandDashboardModal({
             {/* Sidebar: Contacts */}
             <div className="bg-white border border-brand-border rounded-[24px] flex flex-col h-full lg:col-span-1 overflow-hidden shadow-sm">
               <div className="p-4 border-b border-brand-border font-black text-brand-brown flex items-center justify-between bg-brand-cream/50">
-                <span className="text-sm">المحادثات المباشرة</span>
+                <span className="text-sm">{t('directConversations')}</span>
               </div>
               <div className="flex-1 overflow-y-auto bg-white divide-y divide-brand-border/40">
                 {chatContacts.length === 0 ? (
                   <div className="p-6 text-brand-brownLight font-medium text-xs text-center space-y-2">
                     <MessageSquare className="w-8 h-8 mx-auto text-brand-orange/40" />
-                    <p>لا توجد محادثات بعد.</p>
-                    <p className="text-[11px] text-brand-brownLight/70">تواصل مع صناع المحتوى من دليل المبدعين أو عبر زر "تواصل" على أي صانع محتوى.</p>
+                    <p>{t('noChatsYet')}</p>
+                    <p className="text-[11px] text-brand-brownLight/70">{t('brandChatSidebarHelp')}</p>
                   </div>
                 ) : (
                   chatContacts.map(contact => (
@@ -1482,7 +1476,7 @@ export default function BrandDashboardModal({
                       <div className="overflow-hidden flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-1">
                           <h4 className="font-bold text-brand-brown text-xs truncate flex items-center gap-1">
-                            <span>{contact.full_name || 'صانع محتوى'}</span>
+                            <span>{contact.full_name || t('roleCreator')}</span>
                             {contact.is_verified && <BadgeCheck className="w-3.5 h-3.5 text-brand-orange shrink-0" />}
                           </h4>
                           {contact.lastMessageAt && (
@@ -1492,7 +1486,7 @@ export default function BrandDashboardModal({
                           )}
                         </div>
                         <p className="text-[11px] font-medium text-brand-brownLight truncate mt-0.5">
-                          {contact.lastMessage || contact.category || 'صانع محتوى'}
+                          {contact.lastMessage || getLocalizedCategory(contact.category, language) || t('roleCreator')}
                         </p>
                       </div>
                     </div>
@@ -1518,12 +1512,12 @@ export default function BrandDashboardModal({
                       />
                       <div>
                         <h3 className="font-bold text-brand-brown text-sm flex items-center gap-1.5">
-                          <span>{selectedContact?.full_name || selectedContact?.name || 'صانع محتوى'}</span>
+                          <span>{selectedContact?.full_name || selectedContact?.name || t('roleCreator')}</span>
                           {selectedContact?.is_verified && <BadgeCheck className="w-4 h-4 text-brand-orange" />}
                         </h3>
                         <div className="flex items-center gap-2 mt-0.5">
                           <span className="text-[11px] font-medium text-emerald-600 flex items-center gap-1">
-                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> متصل الآن
+                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> {t('onlineNow')}
                           </span>
                           {selectedContact?.category && (
                             <>
@@ -1543,14 +1537,14 @@ export default function BrandDashboardModal({
                           onHireCreator({
                             id: selectedContact.id,
                             name: selectedContact.full_name || selectedContact.name,
-                            ratePerPost: selectedContact.rate_per_post || 20000,
+                            ratePerPost: Number(selectedContact.rate_per_post) || 0,
                             avatar: selectedContact.avatar_url || selectedContact.avatar
                           });
                         }}
                         className="btn-primary py-1.5 px-3 text-xs flex items-center gap-1"
                       >
                         <CreditCard className="w-3.5 h-3.5" />
-                        <span>توظيف</span>
+                        <span>{t('hireAction')}</span>
                       </button>
                     )}
                   </div>
@@ -1562,10 +1556,10 @@ export default function BrandDashboardModal({
                           <MessageSquare className="w-6 h-6" />
                         </div>
                         <h4 className="font-bold text-brand-brown text-sm">
-                          ابدأ المحادثة مع {selectedContact?.full_name || selectedContact?.name || 'صانع المحتوى'}
+                          {t('startChatWith')} {selectedContact?.full_name || selectedContact?.name || t('roleCreator')}
                         </h4>
                         <p className="text-xs text-brand-brownLight max-w-xs leading-relaxed">
-                          أرسل استفسارك أو تفاصيل الحملة الإعلانية وسيقوم المبدع بالرد عليك مباشرة.
+                          {t('brandChatWelcomeDesc')}
                         </p>
                       </div>
                     ) : (
@@ -1606,7 +1600,7 @@ export default function BrandDashboardModal({
                     <form onSubmit={handleSendMessage} className="flex gap-2">
                       <input
                         type="text"
-                        placeholder="اكتب رسالتك هنا..."
+                        placeholder={t('typeYourMessage')}
                         className="flex-1 bg-[#FAFAFA] border border-brand-border rounded-full px-5 py-2.5 text-brand-brown text-xs font-medium focus:outline-none focus:border-brand-orange transition-colors"
                         value={chatMessage}
                         onChange={(e) => setChatMessage(e.target.value)}
@@ -1624,7 +1618,7 @@ export default function BrandDashboardModal({
               ) : (
                 <div className="flex-1 flex flex-col items-center justify-center text-brand-brownLight opacity-60 bg-[#FAFAFA]">
                   <MessageSquare className="w-12 h-12 mb-3 text-brand-brown/30" />
-                  <p className="font-medium text-xs">اختر محادثة من القائمة للبدء</p>
+                  <p className="font-medium text-xs">{t('selectChatToStart')}</p>
                 </div>
               )}
             </div>
@@ -1637,9 +1631,9 @@ export default function BrandDashboardModal({
         {activeTab === 'escrow' && (
           <div className="space-y-6 animate-fade-in">
             <div>
-              <h3 className="text-xl font-black text-brand-brown mb-1">إدارة صفقات الضمان وتحرير الأموال</h3>
+              <h3 className="text-xl font-black text-brand-brown mb-1">{t('escrowDeals')}</h3>
               <p className="text-brand-brownLight font-medium text-xs">
-                مراجعة أعمال المبدعين المستلمة والموافقة على تحرير الأموال من الضمان إلى محفظة صانع المحتوى
+                {t('escrowManagementSub')}
               </p>
             </div>
 
@@ -1647,8 +1641,8 @@ export default function BrandDashboardModal({
               {applications.filter(app => app.status === 'approved' || app.status === 'submitted' || app.status === 'completed').length === 0 ? (
                 <div className="p-12 text-center bg-white rounded-[24px] border border-brand-border shadow-sm">
                   <Lock className="w-12 h-12 text-brand-brownLight/40 mx-auto mb-3" />
-                  <h4 className="font-bold text-brand-brown text-base mb-1">لا توجد صفقات في الضمان حالياً</h4>
-                  <p className="text-brand-brownLight text-xs">عند قبول طلب أحد المبدعين وتأمين الصفقة، ستظهر هنا لمتابعة التنفيذ.</p>
+                  <h4 className="font-bold text-brand-brown text-base mb-1">{t('noEscrowDeals')}</h4>
+                  <p className="text-brand-brownLight text-xs">{t('noEscrowDealsSub')}</p>
                 </div>
               ) : (
                 applications.filter(app => app.status === 'approved' || app.status === 'submitted' || app.status === 'completed').map((app) => {
@@ -1670,14 +1664,14 @@ export default function BrandDashboardModal({
                               ? 'bg-blue-50 text-blue-700 border-blue-200'
                               : 'bg-amber-50 text-amber-700 border-amber-200'
                           }`}>
-                            {isCompleted ? 'تم تحرير الأموال بنجاح ✅' :
-                             hasDeliverable ? 'تم تسليم العمل وبانتظار المراجعة 📦' :
-                             'الأموال محفوظة في حساب الضمان 🔒'}
+                            {isCompleted ? t('fundsReleasedSuccess') :
+                             hasDeliverable ? t('workDeliveredAwaitingReview') :
+                             t('fundsSecuredInEscrowNotice')}
                           </span>
                         </div>
 
                         <p className="text-xs font-medium text-brand-brownLight">
-                          المبدع المكلف: <strong className="text-brand-brown">{app.creator?.full_name || 'بدون اسم'}</strong> | المبلغ المحجوز: <strong className="text-brand-orange font-mono font-bold">{formatDZD(app.campaign?.budget, language)}</strong>
+                          {t('assignedCreatorBadge')} <strong className="text-brand-brown">{app.creator?.full_name || t('roleCreator')}</strong> | {t('heldAmountBadge')} <strong className="text-brand-orange font-mono font-bold">{formatDZD(app.campaign?.budget, language)}</strong>
                         </p>
 
                         {/* Deliverable URL */}
@@ -1690,7 +1684,7 @@ export default function BrandDashboardModal({
                               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 text-xs font-bold transition-colors"
                             >
                               <ExternalLink className="w-3.5 h-3.5" />
-                              <span>معاينة رابط المنشور / الريلز المنفذ</span>
+                              <span>{t('previewDeliverableReel')}</span>
                             </a>
                           </div>
                         )}
@@ -1701,7 +1695,7 @@ export default function BrandDashboardModal({
                         {isCompleted ? (
                           <span className="text-xs text-emerald-700 font-bold flex items-center gap-1.5 px-4 py-2 bg-emerald-50 rounded-full border border-emerald-200">
                             <CheckCircle2 className="w-4 h-4" />
-                            <span>تمت العملية بنجاح</span>
+                            <span>{t('actionCompletedSuccess')}</span>
                           </span>
                         ) : (
                           <button
@@ -1709,7 +1703,7 @@ export default function BrandDashboardModal({
                             className="btn-primary text-xs px-5 py-3 flex items-center gap-2 shadow-md shadow-brand-orange/20"
                           >
                             <ShieldCheck className="w-4 h-4" />
-                            <span>الموافقة وتحرير الأموال الآن</span>
+                            <span>{t('approveAndReleaseFundsNow')}</span>
                           </button>
                         )}
                       </div>
@@ -1731,18 +1725,18 @@ export default function BrandDashboardModal({
                 <Building2 className="w-7 h-7" />
               </div>
               <div>
-                <h3 className="text-2xl font-black text-brand-brown mb-1">إعدادات ملف المتجر والمشروع</h3>
-                <p className="text-xs font-medium text-brand-brownLight">بيانات متجرك تظهر لصناع المحتوى عند التقديم والتواصل</p>
+                <h3 className="text-2xl font-black text-brand-brown mb-1">{t('storeProfileTitle')}</h3>
+                <p className="text-xs font-medium text-brand-brownLight">{t('storeProfileHint')}</p>
               </div>
             </div>
 
             <form onSubmit={handleSaveProfile} className="space-y-5">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-brand-brown mb-2">اسم المتجر / العلامة التجارية *</label>
+                  <label className="block text-xs font-bold text-brand-brown mb-2">{t('storeNameAsterisk')}</label>
                   <input
                     type="text"
-                    placeholder="مثال: متجر ستايل الجزائري"
+                    placeholder={t('storeNamePlaceholder')}
                     className="input-field w-full"
                     value={profileData.brandName}
                     onChange={(e) => setProfileData({ ...profileData, brandName: e.target.value })}
@@ -1751,29 +1745,29 @@ export default function BrandDashboardModal({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-brand-brown mb-2">مجال النشاط التجاري (Sector) *</label>
+                  <label className="block text-xs font-bold text-brand-brown mb-2">{t('storeSectorAsterisk')}</label>
                   <select
                     className="input-field w-full"
                     value={profileData.sector}
                     onChange={(e) => setProfileData({ ...profileData, sector: e.target.value })}
                   >
-                    <option value="تجارة إلكترونية وموضة">تجارة إلكترونية وموضة</option>
-                    <option value="إلكترونيات وهواتف">إلكترونيات وهواتف</option>
-                    <option value="مطاعم ومأكولات">مطاعم ومأكولات</option>
-                    <option value="مستحضرات تجميل وعناية">مستحضرات تجميل وعناية</option>
-                    <option value="خدمات وبرمجيات">خدمات وبرمجيات</option>
-                    <option value="تأثيث وديكور">تأثيث وديكور منزلي</option>
-                    <option value="رياضة ومستلزمات">رياضة ومستلزمات</option>
-                    <option value="مجال آخر">مجال آخر</option>
+                    <option value="ecommerce">{t('sectorEcommerceFashion')}</option>
+                    <option value="electronics">{t('sectorElectronicsPhones')}</option>
+                    <option value="food">{t('sectorFoodDining')}</option>
+                    <option value="cosmetics">{t('sectorCosmeticsCare')}</option>
+                    <option value="services">{t('sectorServicesSoftware')}</option>
+                    <option value="decor">{t('sectorFurnitureDecor')}</option>
+                    <option value="sports">{t('sectorSportsFitness')}</option>
+                    <option value="other">{t('sectorOther')}</option>
                   </select>
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-brand-brown mb-2">وصف النشاط التجاري والمنتجات</label>
+                <label className="block text-xs font-bold text-brand-brown mb-2">{t('storeDescriptionLabel')}</label>
                 <textarea
                   rows={4}
-                  placeholder="اكتب نبذة مختصرة عن متجرك، المنتجات التي تقدمها، والفئة المستهدفة..."
+                  placeholder={t('storeDescPlaceholder')}
                   className="input-field w-full"
                   value={profileData.bio}
                   onChange={(e) => setProfileData({ ...profileData, bio: e.target.value })}
@@ -1782,7 +1776,7 @@ export default function BrandDashboardModal({
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-brand-brown mb-2">رقم الهاتف للتواصل</label>
+                  <label className="block text-xs font-bold text-brand-brown mb-2">{t('contactPhoneLabel')}</label>
                   <div className="relative">
                     <Phone className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-brownLight" />
                     <input
@@ -1796,12 +1790,12 @@ export default function BrandDashboardModal({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-brand-brown mb-2">الولاية / المقر</label>
+                  <label className="block text-xs font-bold text-brand-brown mb-2">{t('storeLocationWilaya')}</label>
                   <div className="relative">
                     <MapPin className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-brownLight" />
                     <input
                       type="text"
-                      placeholder="مثال: الجزائر العاصمة"
+                      placeholder={t('storeLocationPlaceholder')}
                       className="input-field w-full pr-10"
                       value={profileData.wilaya}
                       onChange={(e) => setProfileData({ ...profileData, wilaya: e.target.value })}
@@ -1810,7 +1804,7 @@ export default function BrandDashboardModal({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-brand-brown mb-2">رقم السجل التجاري / NIF</label>
+                  <label className="block text-xs font-bold text-brand-brown mb-2">{t('commercialRegisterNIF')}</label>
                   <input
                     type="text"
                     placeholder="16/00-1234567"
@@ -1822,7 +1816,7 @@ export default function BrandDashboardModal({
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-brand-brown mb-2">رابط الموقع أو صفحة السوشيال ميديا</label>
+                <label className="block text-xs font-bold text-brand-brown mb-2">{t('socialOrWebsiteUrl')}</label>
                 <div className="relative">
                   <Globe className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-brownLight" />
                   <input
@@ -1838,7 +1832,7 @@ export default function BrandDashboardModal({
               {savedSuccess && (
                 <div className="p-3.5 bg-emerald-50 border border-emerald-200 text-emerald-600 rounded-xl text-xs font-bold text-center flex items-center justify-center gap-2 animate-scale-in">
                   <CheckCircle2 className="w-4 h-4" />
-                  <span>{t('profileSaved') || 'تم حفظ بيانات المتجر بنجاح!'}</span>
+                  <span>{t('profileSaved')}</span>
                 </div>
               )}
 
@@ -1846,7 +1840,7 @@ export default function BrandDashboardModal({
                 type="submit" 
                 className="btn-primary w-full py-4 font-bold text-base flex items-center justify-center gap-2 shadow-md shadow-brand-orange/20 mt-4"
               >
-                <span>{t('saveStoreProfile') || 'حفظ بيانات المتجر والمشروع'}</span>
+                <span>{t('saveStoreProfile')}</span>
               </button>
             </form>
           </div>
@@ -1869,17 +1863,17 @@ export default function BrandDashboardModal({
                 <Star className="w-6 h-6 fill-amber-500" />
               </div>
               <h3 className="text-xl font-black text-brand-brown mb-1">
-                {t('rateCreator') || 'تقييم صانع المحتوى'}
+                {t('rateCreator')}
               </h3>
               <p className="text-xs font-medium text-brand-brownLight">
-                شارك تجربتك مع <strong>{reviewModal.creatorName}</strong> لمساعدة المتاجر الأخرى
+                {t('reviewCreatorExperience')} - <strong>{reviewModal.creatorName}</strong>
               </p>
             </div>
 
             {reviewModal.success ? (
               <div className="p-6 bg-emerald-50 rounded-2xl border border-emerald-200 text-center text-emerald-700 font-bold text-sm">
                 <CheckCircle2 className="w-10 h-10 mx-auto mb-2 text-emerald-600" />
-                <span>{t('reviewThanks') || 'شكراً لتقييمك! تم حفظ المراجعة بنجاح.'}</span>
+                <span>{t('reviewThanks')}</span>
               </div>
             ) : (
               <form onSubmit={handleSubmitReview} className="space-y-4">
@@ -1904,10 +1898,10 @@ export default function BrandDashboardModal({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-brand-brown mb-1.5">ملاحظاتك وتقييمك</label>
+                  <label className="block text-xs font-bold text-brand-brown mb-1.5">{t('reviewFeedbackTitle')}</label>
                   <textarea
                     rows={3}
-                    placeholder={t('reviewPlaceholder') || 'اكتب تقييمك للمبدع هنا (الالتزام بالمواعيد، جودة المحتوى، التفاعل)...'}
+                    placeholder={t('reviewPlaceholder')}
                     className="input-field w-full text-xs"
                     value={reviewModal.reviewText}
                     onChange={(e) => setReviewModal(prev => ({ ...prev, reviewText: e.target.value }))}
@@ -1919,7 +1913,7 @@ export default function BrandDashboardModal({
                   disabled={reviewModal.submitting}
                   className="btn-primary w-full py-3 text-sm font-bold flex items-center justify-center gap-2 shadow-sm"
                 >
-                  {reviewModal.submitting ? 'جاري الإرسال...' : (t('reviewSubmit') || 'إرسال التقييم')}
+                  {reviewModal.submitting ? t('reviewSubmitting') : t('reviewSubmit')}
                 </button>
               </form>
             )}

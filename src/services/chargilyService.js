@@ -107,13 +107,22 @@ export async function createCheckoutSession({ amount, dealId, creatorId, brandId
 /**
  * Get payment status label and color for UI badges
  */
-export function getPaymentStatusConfig(status) {
+export function getPaymentStatusConfig(status, lang = 'ar') {
+  const labels = {
+    pending: { ar: 'قيد الانتظار', fr: 'En attente', en: 'Pending' },
+    escrow_funded: { ar: 'في الضمان', fr: 'En séquestre', en: 'In Escrow' },
+    released: { ar: 'تم التحرير', fr: 'Libéré', en: 'Released' },
+    refunded: { ar: 'مسترجع', fr: 'Remboursé', en: 'Refunded' },
+    failed: { ar: 'فشل', fr: 'Échoué', en: 'Failed' },
+  };
+  const activeLabel = (labels[status] && (labels[status][lang] || labels[status].en || labels[status].ar)) || labels.pending[lang] || labels.pending.ar;
+
   const configs = {
-    pending: { label: 'قيد الانتظار', color: 'amber', bg: 'bg-amber-50', text: 'text-amber-800', border: 'border-amber-300' },
-    escrow_funded: { label: 'في الضمان', color: 'blue', bg: 'bg-blue-50', text: 'text-blue-800', border: 'border-blue-300' },
-    released: { label: 'تم التحرير', color: 'emerald', bg: 'bg-emerald-50', text: 'text-emerald-800', border: 'border-emerald-300' },
-    refunded: { label: 'مسترجع', color: 'red', bg: 'bg-red-50', text: 'text-red-800', border: 'border-red-300' },
-    failed: { label: 'فشل', color: 'red', bg: 'bg-red-50', text: 'text-red-800', border: 'border-red-300' },
+    pending: { label: activeLabel, color: 'amber', bg: 'bg-amber-50', text: 'text-amber-800', border: 'border-amber-300' },
+    escrow_funded: { label: activeLabel, color: 'blue', bg: 'bg-blue-50', text: 'text-blue-800', border: 'border-blue-300' },
+    released: { label: activeLabel, color: 'emerald', bg: 'bg-emerald-50', text: 'text-emerald-800', border: 'border-emerald-300' },
+    refunded: { label: activeLabel, color: 'red', bg: 'bg-red-50', text: 'text-red-800', border: 'border-red-300' },
+    failed: { label: activeLabel, color: 'red', bg: 'bg-red-50', text: 'text-red-800', border: 'border-red-300' },
   }
   return configs[status] || configs.pending
 }
@@ -121,10 +130,18 @@ export function getPaymentStatusConfig(status) {
 /**
  * Get payment method display info
  */
-export function getPaymentMethodConfig(method) {
+export function getPaymentMethodConfig(method, lang = 'ar') {
   const configs = {
-    edahabia: { label: 'بطاقة الذهبية', icon: '💳', gradient: 'from-yellow-600 to-yellow-700' },
-    cib: { label: 'بطاقة CIB', icon: '🏦', gradient: 'from-blue-700 to-blue-900' },
+    edahabia: { 
+      label: lang === 'ar' ? 'بطاقة الذهبية' : (lang === 'fr' ? 'Carte Edahabia' : 'Edahabia Card'), 
+      icon: '💳', 
+      gradient: 'from-yellow-600 to-yellow-700' 
+    },
+    cib: { 
+      label: lang === 'ar' ? 'بطاقة CIB' : (lang === 'fr' ? 'Carte CIB' : 'CIB Card'), 
+      icon: '🏦', 
+      gradient: 'from-blue-700 to-blue-900' 
+    },
   }
   return configs[method] || configs.edahabia
 }

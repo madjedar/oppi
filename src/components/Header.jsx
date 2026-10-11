@@ -75,7 +75,7 @@ const Header = ({ onOpenAuth, onOpenDashboard, onOpenProfileSettings, onOpenCont
           </a>
 
           {/* Desktop Nav */}
-          <nav aria-label="التنقل الرئيسي" className="hidden md:flex items-center gap-4">
+          <nav aria-label={t('mainNavigation')} className="hidden md:flex items-center gap-4">
             
             {/* Language Switcher */}
             <div className="relative" ref={langMenuRef}>
@@ -83,14 +83,14 @@ const Header = ({ onOpenAuth, onOpenDashboard, onOpenProfileSettings, onOpenCont
                 onClick={() => setIsLangMenuOpen(!isLangMenuOpen)}
                 aria-haspopup="true"
                 aria-expanded={isLangMenuOpen}
-                aria-label="تغيير لغة العرض"
+                aria-label={t('changeLanguage')}
                 className="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition-colors font-bold text-sm"
               >
                 <Globe className="w-4 h-4 text-brand-orange" aria-hidden="true" />
                 <span className="uppercase">{language}</span>
               </button>
               {isLangMenuOpen && (
-                <div role="menu" className="absolute top-full mt-2 w-32 bg-[#0B1528] border border-white/15 rounded-[20px] shadow-2xl overflow-hidden py-1 z-50 ltr:right-0 rtl:left-0 text-white">
+                <div role="menu" className="absolute top-full mt-2 w-32 bg-[#0B1528] border border-white/15 rounded-[20px] shadow-2xl overflow-hidden py-1 z-50 end-0 text-white">
                   <button role="menuitem" onClick={() => { setLanguage('ar'); setIsLangMenuOpen(false); }} className="w-full text-start px-4 py-2 hover:bg-white/10 text-slate-200 hover:text-white text-sm font-bold">🇩🇿 العربية</button>
                   <button role="menuitem" onClick={() => { setLanguage('fr'); setIsLangMenuOpen(false); }} className="w-full text-start px-4 py-2 hover:bg-white/10 text-slate-200 hover:text-white text-sm font-bold">🇫🇷 Français</button>
                   <button role="menuitem" onClick={() => { setLanguage('en'); setIsLangMenuOpen(false); }} className="w-full text-start px-4 py-2 hover:bg-white/10 text-slate-200 hover:text-white text-sm font-bold">🇬🇧 English</button>
@@ -103,12 +103,12 @@ const Header = ({ onOpenAuth, onOpenDashboard, onOpenProfileSettings, onOpenCont
               onClick={onOpenContact}
               onMouseEnter={preloadContactModal}
               onFocus={preloadContactModal}
-              aria-label="تواصل معنا"
+              aria-label={t('contactUs')}
               className="flex items-center gap-1.5 px-3 py-2 rounded-full text-slate-300 hover:text-white hover:bg-white/10 transition-colors font-bold text-xs"
-              title="تواصل معنا"
+              title={t('contactUs')}
             >
               <Mail className="w-4 h-4 text-brand-orange" aria-hidden="true" />
-              <span>تواصل معنا</span>
+              <span>{t('contactUs')}</span>
             </button>
 
             {user ? (
@@ -123,20 +123,20 @@ const Header = ({ onOpenAuth, onOpenDashboard, onOpenProfileSettings, onOpenCont
                   onMouseEnter={() => preloadDashboardForRole(userIsBrand ? 'brand' : 'creator')}
                   onFocus={() => preloadDashboardForRole(userIsBrand ? 'brand' : 'creator')}
                   className="flex items-center gap-1.5 px-3.5 py-2 rounded-full text-slate-200 hover:text-white hover:bg-white/10 transition-colors font-bold text-xs border border-white/15 shadow-sm"
-                  title="الرسائل والمحادثات"
+                  title={t('navMessages')}
                 >
                   <MessageSquare className="w-4 h-4 text-brand-orange" aria-hidden="true" />
-                  <span>الرسائل</span>
+                  <span>{t('navMessages')}</span>
                 </button>
 
-                {/* Show Add Campaign button ONLY for users who have a Store / Projects account */}
+                {/* Show Add Campaign button ONLY for users who signed up as stores and companies */}
                 {userCanCreateCampaign && (
                   <button
                     onClick={() => onOpenDashboard('create', 'brand')}
                     onMouseEnter={() => preloadDashboardForRole('brand')}
                     onFocus={() => preloadDashboardForRole('brand')}
                     className="btn-primary text-xs flex items-center gap-1.5 shadow-md shadow-brand-orange/30"
-                    title="إضافة حملة جديدة"
+                    title={t('addCampaign')}
                   >
                     <PlusCircle className="w-4 h-4" aria-hidden="true" />
                     <span>{t('addCampaign')}</span>
@@ -187,7 +187,7 @@ const Header = ({ onOpenAuth, onOpenDashboard, onOpenProfileSettings, onOpenCont
                   className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors text-sm px-3 py-2 rounded-full hover:bg-white/10"
                 >
                   <Settings className="w-4 h-4" aria-hidden="true" />
-                  <span>{t('profileSettings') || 'الملف الشخصي'}</span>
+                  <span>{t('profileSettings')}</span>
                 </button>
 
                 <button
@@ -200,11 +200,11 @@ const Header = ({ onOpenAuth, onOpenDashboard, onOpenProfileSettings, onOpenCont
 
                 <button 
                   type="button"
-                  onClick={() => onOpenDashboard(isAdmin ? 'admin' : 'overview')}
+                  onClick={() => onOpenDashboard(userIsAdmin ? 'admin' : 'overview')}
                   onMouseEnter={() => preloadDashboardForRole(user?.role)}
                   onFocus={() => preloadDashboardForRole(user?.role)}
-                  aria-label={user.user_metadata?.full_name || 'الملف الشخصي'}
-                  className={`w-10 h-10 rounded-full overflow-hidden border-2 cursor-pointer hover:scale-105 transition-transform ${isAdmin ? 'border-purple-500' : 'border-brand-orange'}`}
+                  aria-label={user.user_metadata?.full_name || t('profileSettings')}
+                  className={`w-10 h-10 rounded-full overflow-hidden border-2 cursor-pointer hover:scale-105 transition-transform ${userIsAdmin ? 'border-purple-500' : 'border-brand-orange'}`}
                   title={user.user_metadata?.full_name || 'Profile'}
                 >
                   <OptimizedImage
@@ -250,17 +250,40 @@ const Header = ({ onOpenAuth, onOpenDashboard, onOpenProfileSettings, onOpenCont
             )}
           </nav>
 
-          {/* Mobile Menu Button */}
-          <div className="md:hidden flex items-center">
+          {/* Mobile Action Controls (Simplified Native App Top Bar) */}
+          <div className="md:hidden flex items-center gap-1.5 sm:gap-2">
+            {/* Mobile Notifications Icon */}
+            {user && (
+              <NotificationDropdown 
+                onOpenMessages={(contactId) => onOpenDashboard('messages', userIsBrand ? 'brand' : 'creator', contactId)} 
+                onOpenDashboard={(tab, role, contactId) => onOpenDashboard(tab, role || (userIsBrand ? 'brand' : 'creator'), contactId)} 
+              />
+            )}
+
+            {/* Mobile Language Selector Toggle */}
+            <button
+              type="button"
+              onClick={() => {
+                const nextLang = language === 'ar' ? 'fr' : language === 'fr' ? 'en' : 'ar';
+                setLanguage(nextLang);
+              }}
+              aria-label={t('changeLanguage')}
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white font-bold text-xs border border-white/10 active:scale-95 transition-all"
+            >
+              <Globe className="w-3.5 h-3.5 text-brand-orange" />
+              <span className="uppercase text-[11px] font-mono">{language}</span>
+            </button>
+
+            {/* Mobile Secondary Menu Toggle */}
             <button
               type="button"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              aria-label={isMobileMenuOpen ? "إغلاق القائمة الرئيسية" : "فتح القائمة الرئيسية"}
+              aria-label={isMobileMenuOpen ? t('closeMenu') : t('openMenu')}
               aria-expanded={isMobileMenuOpen}
               aria-controls="mobile-navigation"
-              className="text-white hover:text-brand-orange p-2 transition-colors"
+              className="text-white hover:text-brand-orange p-2 rounded-full hover:bg-white/10 active:scale-95 transition-all"
             >
-              {isMobileMenuOpen ? <X className="w-6 h-6" aria-hidden="true" /> : <Menu className="w-6 h-6" aria-hidden="true" />}
+              {isMobileMenuOpen ? <X className="w-5 h-5" aria-hidden="true" /> : <Menu className="w-5 h-5" aria-hidden="true" />}
             </button>
           </div>
         </div>
@@ -268,113 +291,98 @@ const Header = ({ onOpenAuth, onOpenDashboard, onOpenProfileSettings, onOpenCont
 
       {/* Mobile Drawer */}
       {isMobileMenuOpen && (
-        <nav id="mobile-navigation" aria-label="قائمة الجوال" className="md:hidden bg-[#070E1A]/98 backdrop-blur-xl border-b border-white/10 px-4 py-6 space-y-4 text-white">
-          {/* Mobile Language Switcher */}
-          <div className="flex items-center gap-2 mb-4 bg-white/10 p-2 rounded-full border border-white/10 justify-center">
-            <button onClick={() => { setLanguage('ar'); setIsMobileMenuOpen(false); }} className={`flex-1 py-2 rounded-full text-sm font-bold ${language === 'ar' ? 'bg-brand-orange text-white' : 'text-slate-300'}`}>العربية</button>
-            <button onClick={() => { setLanguage('fr'); setIsMobileMenuOpen(false); }} className={`flex-1 py-2 rounded-full text-sm font-bold ${language === 'fr' ? 'bg-brand-orange text-white' : 'text-slate-300'}`}>Français</button>
-            <button onClick={() => { setLanguage('en'); setIsMobileMenuOpen(false); }} className={`flex-1 py-2 rounded-full text-sm font-bold ${language === 'en' ? 'bg-brand-orange text-white' : 'text-slate-300'}`}>English</button>
-          </div>
-
+        <nav id="mobile-navigation" aria-label={t('mobileMenu')} className="md:hidden bg-[#070E1A]/98 backdrop-blur-xl border-b border-white/10 px-4 py-5 space-y-4 text-white animate-scale-in">
           {user ? (
             <>
-              {/* Show Add Campaign button ONLY for users who have a Store / Projects account */}
-              {userCanCreateCampaign && (
+              {/* User Identity Snippet */}
+              <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-white/10">
+                <div className="w-11 h-11 rounded-full overflow-hidden border-2 border-brand-orange shrink-0">
+                  <OptimizedImage
+                    src={user.profile?.avatar_url || user.user_metadata?.avatar_url}
+                    fallbackType="user"
+                    seed={user.user_metadata?.full_name || user.id}
+                    alt={user.user_metadata?.full_name || 'User'}
+                    width="44"
+                    height="44"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-bold text-sm text-white truncate">
+                    {user.profile?.full_name || user.profile?.brand_name || user.user_metadata?.full_name || t('defaultUser')}
+                  </h4>
+                  <span className="text-[11px] text-brand-orange font-bold uppercase">
+                    {userIsAdmin ? t('adminDashboard') : userIsBrand ? t('brandDashboard') : t('creatorDashboard')}
+                  </span>
+                </div>
+              </div>
+
+              {/* Action shortcuts */}
+              <div className="space-y-2 pt-1">
                 <button
-                  onClick={() => { setIsMobileMenuOpen(false); onOpenDashboard('create', 'brand'); }}
-                  className="btn-primary w-full flex items-center justify-center gap-2 shadow-lg shadow-brand-orange/30"
+                  onClick={() => { setIsMobileMenuOpen(false); onOpenProfileSettings(); }}
+                  className="w-full py-2.5 px-4 rounded-xl bg-white/5 hover:bg-white/10 text-slate-200 flex items-center justify-between font-bold text-xs border border-white/10 transition-colors"
                 >
-                  <PlusCircle className="w-5 h-5" />
-                  <span>{t('addCampaign')}</span>
+                  <div className="flex items-center gap-2">
+                    <Settings className="w-4 h-4 text-brand-orange" />
+                    <span>{t('profileSettings')}</span>
+                  </div>
+                  <span className="text-slate-400 text-[10px]">{t('edit')}</span>
                 </button>
-              )}
 
-              <button
-                onClick={() => { setIsMobileMenuOpen(false); onOpenDashboard('messages', userIsBrand ? 'brand' : 'creator'); }}
-                className="w-full py-3 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center gap-2 font-bold border border-white/10"
-              >
-                <MessageSquare className="w-5 h-5 text-brand-orange" />
-                <span>الرسائل والمحادثات</span>
-              </button>
-
-              {userIsBrand && (
                 <button
-                  onClick={() => { setIsMobileMenuOpen(false); onOpenDashboard('overview', 'brand'); }}
-                  className="w-full py-3 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center gap-2 font-bold border border-white/10"
+                  onClick={() => { setIsMobileMenuOpen(false); onOpenContact?.(); }}
+                  className="w-full py-2.5 px-4 rounded-xl bg-white/5 hover:bg-white/10 text-slate-200 flex items-center justify-between font-bold text-xs border border-white/10 transition-colors"
                 >
-                  <Building2 className="w-5 h-5 text-brand-orange" />
-                  <span>{t('brandDashboard')}</span>
+                  <div className="flex items-center gap-2">
+                    <Mail className="w-4 h-4 text-brand-orange" />
+                    <span>{t('contactSupport')}</span>
+                  </div>
+                  <span className="text-slate-400 text-[10px]">{t('help')}</span>
                 </button>
-              )}
 
-              {userIsCreator && (
                 <button
-                  onClick={() => { setIsMobileMenuOpen(false); onOpenDashboard('overview'); }}
-                  className="w-full py-3 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center gap-2 font-bold border border-white/10"
+                  onClick={() => { setIsMobileMenuOpen(false); logout(); }}
+                  className="w-full py-2.5 px-4 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-300 flex items-center justify-center gap-2 font-bold text-xs border border-red-500/20 transition-colors mt-2"
                 >
-                  <Sparkles className="w-5 h-5 text-brand-orange" />
-                  <span>{t('creatorDashboard')}</span>
+                  <LogOut className="w-4 h-4" />
+                  <span>{t('logout')}</span>
                 </button>
-              )}
-
-              {userIsAdmin && (
-                <button
-                  onClick={() => { setIsMobileMenuOpen(false); onOpenDashboard('admin'); }}
-                  className="w-full py-3 rounded-full bg-purple-900/40 text-purple-200 border border-purple-500/30 flex items-center justify-center gap-2 font-bold shadow-sm"
-                >
-                  <ShieldAlert className="w-5 h-5" />
-                  <span>{t('adminDashboard')}</span>
-                </button>
-              )}
-
-              <button
-                onClick={() => { setIsMobileMenuOpen(false); onOpenProfileSettings(); }}
-                className="w-full py-3 rounded-full bg-white/5 hover:bg-white/10 text-slate-200 flex items-center justify-center gap-2 font-bold border border-white/10"
-              >
-                <Settings className="w-5 h-5 text-slate-400" />
-                <span>{t('profileSettings') || 'الملف الشخصي'}</span>
-              </button>
-
-              <button
-                onClick={() => { setIsMobileMenuOpen(false); logout(); }}
-                className="w-full py-2 text-slate-400 hover:text-red-400 flex items-center justify-center gap-2 text-sm font-bold"
-              >
-                <LogOut className="w-4 h-4" />
-                <span>{t('logout')}</span>
-              </button>
+              </div>
             </>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2.5 pt-1">
               <button
                 onClick={() => { setIsMobileMenuOpen(false); onOpenAuth('login'); }}
-                className="w-full py-3 rounded-full bg-white/10 text-white font-bold border border-white/15"
+                className="w-full py-3 rounded-full bg-white/10 text-white font-bold text-sm border border-white/15 active:scale-98 transition-all"
               >
                 {t('login')}
               </button>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => { setIsMobileMenuOpen(false); onOpenAuth('signup', 'creator'); }}
+                  className="btn-primary py-2.5 flex items-center justify-center gap-1.5 text-xs font-bold shadow-md shadow-brand-orange/30"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  <span>{t('joinCreator')}</span>
+                </button>
+                <button
+                  onClick={() => { setIsMobileMenuOpen(false); onOpenAuth('signup', 'brand'); }}
+                  className="btn-glass py-2.5 flex items-center justify-center gap-1.5 text-xs font-bold"
+                >
+                  <Building2 className="w-4 h-4 text-brand-orange" />
+                  <span>{t('joinBrand')}</span>
+                </button>
+              </div>
               <button
-                onClick={() => { setIsMobileMenuOpen(false); onOpenAuth('signup', 'creator'); }}
-                className="btn-primary w-full flex items-center justify-center gap-2 shadow-lg shadow-brand-orange/30"
+                onClick={() => { setIsMobileMenuOpen(false); onOpenContact?.(); }}
+                className="w-full py-2.5 rounded-full bg-white/5 border border-white/10 text-slate-300 flex items-center justify-center gap-2 text-xs font-bold mt-2"
               >
-                <Sparkles className="w-5 h-5" />
-                <span>{t('joinCreator')}</span>
-              </button>
-              <button
-                onClick={() => { setIsMobileMenuOpen(false); onOpenAuth('signup', 'brand'); }}
-                className="btn-glass w-full flex items-center justify-center gap-2"
-              >
-                <Building2 className="w-5 h-5 text-brand-orange" />
-                <span>{t('joinBrand')}</span>
+                <Mail className="w-3.5 h-3.5 text-brand-orange" />
+                <span>{t('contactSupportHelp')}</span>
               </button>
             </div>
           )}
-          {/* Mobile Contact Link */}
-          <button
-            onClick={() => { setIsMobileMenuOpen(false); onOpenContact?.(); }}
-            className="w-full py-2.5 rounded-full bg-white/5 border border-white/10 text-slate-300 flex items-center justify-center gap-2 text-xs font-bold"
-          >
-            <Mail className="w-4 h-4 text-brand-orange" aria-hidden="true" />
-            <span>تواصل معنا (madjedalirachedi291@gmail.com)</span>
-          </button>
         </nav>
       )}
     </header>

@@ -44,11 +44,11 @@ const Footer = ({ onLinkClick, onOpenContact }) => {
               </span>
             </div>
             <p className="text-slate-300 text-sm mb-6 leading-relaxed">
-              {t('footerAbout') || 'المنصة الجزائرية الرائدة التي تجمع بين العلامات التجارية وصناع المحتوى لعقد صفقات تسويقية احترافية وموثقة.'}
+              {t('footerAbout')}
             </p>
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 text-xs text-slate-200 border border-white/10">
               <ShieldCheck className="w-4 h-4 text-emerald-400" />
-              <span>دفع وحسابات بنكية جزائرية مضمونة 100%</span>
+              <span>{t('footerGuarantee')}</span>
             </div>
           </div>
 
@@ -80,7 +80,7 @@ const Footer = ({ onLinkClick, onOpenContact }) => {
                   onClick={onOpenContact} 
                   className="text-slate-300 hover:text-brand-orange transition-colors block text-start font-medium text-sm"
                 >
-                  طلب انضمام علامة تجارية
+                  {t('footerJoinBrand')}
                 </button>
               </li>
             </ul>
@@ -114,7 +114,7 @@ const Footer = ({ onLinkClick, onOpenContact }) => {
                   className="btn-primary text-xs py-2.5 px-5 flex items-center gap-2 shadow-lg shadow-brand-orange/30 hover:scale-105 active:scale-95 transition-all"
                 >
                   <Mail className="w-4 h-4" />
-                  <span>تواصل معنا مباشرة</span>
+                  <span>{t('footerDirectContact')}</span>
                 </button>
               </li>
             </ul>
@@ -145,7 +145,7 @@ const Footer = ({ onLinkClick, onOpenContact }) => {
             © {new Date().getFullYear()} OPPI — {t('footerRights')}
           </p>
           <p className="flex items-center justify-center gap-1.5 text-slate-300">
-            <span>{t('footerMadeIn') || 'صنع بكل فخر في الجزائر 🇩🇿'}</span>
+            <span>{t('footerMadeIn')}</span>
           </p>
         </div>
       </div>

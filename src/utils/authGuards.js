@@ -26,17 +26,36 @@ export const isAdmin = (user) => {
 };
 
 /**
- * Checks whether the user is a Brand / Store Owner
+ * Checks whether the user is a Brand / Store / Company Owner
  * @param {object|null} user 
  * @returns {boolean}
  */
 export const isBrand = (user) => {
   if (!user) return false;
+  const rawRole = (
+    user.role ||
+    user.profile?.role ||
+    user.user_metadata?.role ||
+    user.user_metadata?.account_type ||
+    ''
+  ).toLowerCase().trim();
+
   return (
+    rawRole === 'brand' ||
+    rawRole === 'store' ||
+    rawRole === 'company' ||
     user.role === 'brand' ||
+    user.role === 'store' ||
+    user.role === 'company' ||
     user.profile?.role === 'brand' ||
+    user.profile?.role === 'store' ||
+    user.profile?.role === 'company' ||
     user.user_metadata?.role === 'brand' ||
-    user.user_metadata?.account_type === 'brand'
+    user.user_metadata?.role === 'store' ||
+    user.user_metadata?.role === 'company' ||
+    user.user_metadata?.account_type === 'brand' ||
+    user.user_metadata?.account_type === 'store' ||
+    user.user_metadata?.account_type === 'company'
   );
 };
 
@@ -47,7 +66,16 @@ export const isBrand = (user) => {
  */
 export const isCreator = (user) => {
   if (!user) return false;
+  const rawRole = (
+    user.role ||
+    user.profile?.role ||
+    user.user_metadata?.role ||
+    user.user_metadata?.account_type ||
+    ''
+  ).toLowerCase().trim();
+
   return (
+    rawRole === 'creator' ||
     user.role === 'creator' ||
     user.profile?.role === 'creator' ||
     user.user_metadata?.role === 'creator' ||
@@ -67,7 +95,7 @@ export const canApplyToCampaign = (user) => {
 
 /**
  * Checks whether the user is authorized to create/manage campaigns.
- * Strictly only for users who have a store / project account (brand), never for creators.
+ * Strictly only for users who signed up as stores and companies, never for creators or non-store users.
  * @param {object|null} user 
  * @returns {boolean}
  */
@@ -131,4 +159,35 @@ export const canAccessCreatorDashboard = (user) => {
  */
 export const canAccessBrandDashboard = (user) => {
   return isBrand(user) || isAdmin(user);
+};
+
+/**
+ * Controls access to the creator directory.
+ * Guests are allowed to render a public preview, while authenticated
+ * marketplace access is limited to brands and administrators.
+ */
+export const canViewCreatorDirectory = (user) => {
+  if (!user) return true;
+  return isBrand(user) || isAdmin(user);
+};
+
+/**
+ * Controls access to campaigns and store listings.
+ * Guests are allowed to render a public preview, while authenticated
+ * marketplace access is limited to creators and administrators.
+ */
+export const canViewCampaignDirectory = (user) => {
+  if (!user) return true;
+  return isCreator(user) || isAdmin(user);
+};
+
+/**
+ * Controls access to an individual creator profile.
+ * Creators may only open their own profile; brands and administrators may
+ * inspect creator profiles for hiring.
+ */
+export const canViewCreatorProfile = (user, creatorId) => {
+  if (!user) return false;
+  if (isAdmin(user) || isBrand(user)) return true;
+  return isCreator(user) && String(user.id) === String(creatorId);
 };

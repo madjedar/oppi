@@ -6,7 +6,7 @@ import OptimizedImage from './OptimizedImage';
 import { validateReviewForm } from '../utils/validators';
 
 const ReviewModal = ({ isOpen, onClose, creator }) => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [rating, setRating] = useState(0);
   const [hoveredStar, setHoveredStar] = useState(0);
   const [reviewText, setReviewText] = useState('');
@@ -61,7 +61,7 @@ const ReviewModal = ({ isOpen, onClose, creator }) => {
       }
     } catch (err) {
       console.error('Failed to save review:', err);
-      setErrorMsg(err.message || 'فشل حفظ التقييم');
+      setErrorMsg(err.message || t('reviewSaveFailed'));
       setSubmitting(false);
       return;
     }
@@ -90,13 +90,13 @@ const ReviewModal = ({ isOpen, onClose, creator }) => {
       <div 
         className="modal-content bg-white border border-brand-border rounded-[32px] max-w-md w-full my-auto p-6 sm:p-8 relative animate-scale-in max-h-[90vh] overflow-y-auto shadow-2xl"
         onClick={(e) => e.stopPropagation()}
-        dir="rtl"
+        dir={language === 'ar' ? 'rtl' : 'ltr'}
       >
         <button 
           type="button"
           onClick={onClose}
-          aria-label="إغلاق نافذة التقييم"
-          className="absolute top-5 left-5 text-brand-brownLight hover:text-brand-brown hover:bg-brand-cream p-2 rounded-full transition-colors"
+          aria-label={t('close')}
+          className="absolute top-5 start-5 text-brand-brownLight hover:text-brand-brown hover:bg-brand-cream p-2 rounded-full transition-colors"
         >
           <X className="w-5 h-5" aria-hidden="true" />
         </button>
@@ -105,7 +105,7 @@ const ReviewModal = ({ isOpen, onClose, creator }) => {
           <div role="status" aria-live="polite" className="flex flex-col items-center justify-center py-10 animate-scale-in text-center">
             <CheckCircle className="w-16 h-16 text-emerald-500 mb-4 animate-bounce" aria-hidden="true" />
             <h2 id="review-modal-title" className="text-xl font-bold text-brand-brown mb-2">{t('reviewThanks')}</h2>
-            <p className="text-brand-brownLight text-sm">تم إرسال تقييمك بنجاح لمساعدة المجتمع</p>
+            <p className="text-brand-brownLight text-sm">{t('reviewSuccessCommunity')}</p>
           </div>
         ) : (
           <>
@@ -135,7 +135,7 @@ const ReviewModal = ({ isOpen, onClose, creator }) => {
               </div>
             )}
 
-            <div className="flex justify-center gap-2 mb-6" dir="ltr" role="group" aria-label="اختر التقييم بالنجوم">
+            <div className="flex justify-center gap-2 mb-6" dir="ltr" role="group" aria-label={t('selectStarRating')}>
               {[1, 2, 3, 4, 5].map((index) => {
                 const isActive = index <= (hoveredStar || rating);
                 return (
@@ -143,7 +143,7 @@ const ReviewModal = ({ isOpen, onClose, creator }) => {
                     key={index}
                     type="button"
                     disabled={submitting}
-                    aria-label={`تقييم ${index} من 5 نجوم`}
+                    aria-label={`${index} / 5`}
                     className={`focus:outline-none transition-transform hover:scale-110 p-1 ${submitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                     onMouseEnter={() => !submitting && setHoveredStar(index)}
                     onMouseLeave={() => !submitting && setHoveredStar(0)}
@@ -159,7 +159,7 @@ const ReviewModal = ({ isOpen, onClose, creator }) => {
             </div>
 
             <label htmlFor="review-text-input" className="sr-only">
-              {t('reviewPlaceholder') || 'نص التقييم'}
+              {t('reviewPlaceholder')}
             </label>
             <textarea
               id="review-text-input"
@@ -177,7 +177,7 @@ const ReviewModal = ({ isOpen, onClose, creator }) => {
               disabled={rating === 0 || submitting}
               className={`btn-primary w-full py-3.5 font-bold shadow-md shadow-brand-orange/20 ${rating === 0 || submitting ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
-              {submitting ? 'جاري الإرسال...' : 'إرسال التقييم'}
+              {submitting ? t('submitting') : t('reviewSubmit')}
             </button>
           </>
         )}

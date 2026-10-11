@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Bell, BellOff, CheckCircle2, MessageSquare, Briefcase, Sparkles } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function NotificationDropdown({ onOpenMessages, onOpenDashboard }) {
   const { user } = useAuth();
+  const { t, language } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const dropdownRef = useRef(null);
@@ -62,13 +64,29 @@ export default function NotificationDropdown({ onOpenMessages, onOpenDashboard }
     }
   };
 
+  const isMessageNotif = (notif) => {
+    const tStr = (notif?.title || '').toLowerCase();
+    const mStr = (notif?.message || '').toLowerCase();
+    return notif?.type === 'message' || tStr.includes('\u0631\u0633\u0627\u0644\u0629') || mStr.includes('\u0631\u0633\u0627\u0644\u0629') || tStr.includes('message') || mStr.includes('message');
+  };
+
+  const isAcceptedNotif = (notif) => {
+    const tStr = (notif?.title || '').toLowerCase();
+    return tStr.includes('\u0642\u0628\u0648\u0644') || tStr.includes('\u0645\u0628\u0631\u0648\u0643') || tStr.includes('accept') || tStr.includes('congrat') || tStr.includes('félicit');
+  };
+
+  const isCampaignNotif = (notif) => {
+    const tStr = (notif?.title || '').toLowerCase();
+    return tStr.includes('\u062d\u0645\u0644\u0629') || tStr.includes('\u062a\u0642\u062f\u064a\u0645') || tStr.includes('campaign') || tStr.includes('apply') || tStr.includes('candidat');
+  };
+
   const handleNotificationClick = async (notif) => {
     if (!notif.read) {
       await handleMarkAsRead(notif.id);
     }
     setIsOpen(false);
 
-    if (notif.title?.includes('رسالة') || notif.message?.includes('رسالة')) {
+    if (isMessageNotif(notif)) {
       let targetContactId = null;
       if (user?.id) {
         try {
@@ -85,7 +103,7 @@ export default function NotificationDropdown({ onOpenMessages, onOpenDashboard }
       } else if (onOpenDashboard) {
         onOpenDashboard('messages', user?.role || 'creator', targetContactId);
       }
-    } else if (notif.title?.includes('حملة') || notif.title?.includes('تقديم')) {
+    } else if (isCampaignNotif(notif)) {
       if (onOpenDashboard) {
         onOpenDashboard('opportunities', user?.role || 'creator');
       }
@@ -114,7 +132,8 @@ export default function NotificationDropdown({ onOpenMessages, onOpenDashboard }
     try {
       const d = new Date(dateStr);
       if (isNaN(d.getTime())) return '';
-      return d.toLocaleDateString('ar-DZ', {
+      const locale = language === 'ar' ? 'ar-DZ' : language === 'fr' ? 'fr-FR' : 'en-US';
+      return d.toLocaleDateString(locale, {
         month: 'short',
         day: 'numeric',
         hour: '2-digit',
@@ -132,9 +151,9 @@ export default function NotificationDropdown({ onOpenMessages, onOpenDashboard }
         onClick={() => setIsOpen(!isOpen)}
         aria-haspopup="true"
         aria-expanded={isOpen}
-        aria-label={`الإشعارات ${unreadCount > 0 ? `(${unreadCount} جديدة)` : ''}`}
+        aria-label={`${t('notifications')} ${unreadCount > 0 ? `(${unreadCount} ${t('newNotificationsCount')})` : ''}`}
         className="relative p-2 text-slate-300 hover:text-white rounded-full hover:bg-white/10 transition-colors"
-        title="الإشعارات"
+        title={t('notifications')}
       >
         <Bell className="w-5 h-5" aria-hidden="true" />
         {unreadCount > 0 && (
@@ -145,16 +164,16 @@ export default function NotificationDropdown({ onOpenMessages, onOpenDashboard }
       {isOpen && (
         <div 
           role="region" 
-          aria-label="لوحة الإشعارات"
-          className="absolute top-full left-0 sm:right-0 sm:left-auto mt-2 w-80 sm:w-96 bg-[#0B1528] border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50 animate-fade-in" 
-          dir="rtl"
+          aria-label={t('notificationsPanel')}
+          className="absolute top-full start-0 sm:end-0 sm:start-auto mt-2 w-80 sm:w-96 bg-[#0B1528] border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50 animate-fade-in" 
+          dir={language === 'ar' ? 'rtl' : 'ltr'}
         >
           <div className="p-4 border-b border-white/10 flex justify-between items-center bg-white/5">
             <h3 className="font-bold text-white flex items-center gap-2">
-              <span>الإشعارات</span>
+              <span>{t('notifications')}</span>
               {unreadCount > 0 && (
                 <span className="bg-red-500/20 text-red-400 text-[10px] px-2 py-0.5 rounded-full">
-                  {unreadCount} جديد
+                  {unreadCount} {t('newNotificationsCount')}
                 </span>
               )}
             </h3>
@@ -164,7 +183,7 @@ export default function NotificationDropdown({ onOpenMessages, onOpenDashboard }
                 onClick={handleMarkAllAsRead}
                 className="text-xs text-slate-400 hover:text-white transition-colors"
               >
-                تحديد الكل كمقروء
+                {t('markAllAsRead')}
               </button>
             )}
           </div>
@@ -173,7 +192,7 @@ export default function NotificationDropdown({ onOpenMessages, onOpenDashboard }
             {notifications.length === 0 ? (
               <div className="p-8 text-center text-slate-400 flex flex-col items-center gap-3">
                 <BellOff className="w-8 h-8 opacity-50" />
-                <span className="text-sm">لا توجد إشعارات حالياً</span>
+                <span className="text-sm">{t('noNewNotifications')}</span>
               </div>
             ) : (
               notifications.map((notif) => (
@@ -183,15 +202,15 @@ export default function NotificationDropdown({ onOpenMessages, onOpenDashboard }
                   className={`p-4 border-b border-white/5 flex gap-3 cursor-pointer transition-colors ${
                     notif.read ? 'opacity-70 hover:bg-white/5' : 'bg-blue-500/10 hover:bg-blue-500/20'
                   }`}
-                  title="انقر لفتح المحادثة أو التفاصيل"
+                  title={t('clickToOpenConversation')}
                 >
                   <div className={`mt-1 flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-                    notif.title?.includes('رسالة') ? 'bg-blue-500/20 text-blue-400' :
-                    notif.title?.includes('قبول') || notif.title?.includes('مبروك') ? 'bg-emerald-500/20 text-emerald-400' :
+                    isMessageNotif(notif) ? 'bg-blue-500/20 text-blue-400' :
+                    isAcceptedNotif(notif) ? 'bg-emerald-500/20 text-emerald-400' :
                     'bg-purple-500/20 text-purple-400'
                   }`}>
-                    {notif.title?.includes('رسالة') ? <MessageSquare className="w-4 h-4" /> :
-                     notif.title?.includes('قبول') ? <CheckCircle2 className="w-4 h-4" /> :
+                    {isMessageNotif(notif) ? <MessageSquare className="w-4 h-4" /> :
+                     isAcceptedNotif(notif) ? <CheckCircle2 className="w-4 h-4" /> :
                      <Sparkles className="w-4 h-4" />}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -199,9 +218,9 @@ export default function NotificationDropdown({ onOpenMessages, onOpenDashboard }
                       <h4 className={`text-sm ${notif.read ? 'text-slate-300' : 'text-white font-bold'}`}>
                         {notif.title}
                       </h4>
-                      {notif.title?.includes('رسالة') && (
+                      {isMessageNotif(notif) && (
                         <span className="text-[10px] text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-full font-medium shrink-0">
-                          فتح المحادثة ←
+                          {t('openConversationArrow')}
                         </span>
                       )}
                     </div>
@@ -211,7 +230,7 @@ export default function NotificationDropdown({ onOpenMessages, onOpenDashboard }
                     </span>
                   </div>
                   {!notif.read && (
-                    <div className="mr-auto flex-shrink-0 w-2 h-2 rounded-full bg-blue-500 mt-2"></div>
+                    <div className="ms-auto flex-shrink-0 w-2 h-2 rounded-full bg-blue-500 mt-2"></div>
                   )}
                 </div>
               ))

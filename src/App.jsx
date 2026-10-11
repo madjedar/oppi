@@ -2,10 +2,13 @@ import { useState, useEffect, lazy, Suspense } from 'react'
 import { useAuth, AuthProvider } from './context/AuthContext'
 import { LanguageProvider, useLanguage } from './context/LanguageContext'
 import { supabase } from './lib/supabase'
-import { getLocalizedItem } from './utils/localized'
+import { getLocalizedItem, getLocalizedCategory, getLocalizedWilaya, CATEGORIES_MAP } from './utils/localized'
 import { formatDZD } from './services/chargilyService'
 import Header from './components/Header'
+import BottomNav from './components/BottomNav'
 import Hero from './components/Hero'
+import CreatorFilters from './components/CreatorFilters'
+import CampaignFilters from './components/CampaignFilters'
 import Footer from './components/Footer'
 import OptimizedImage from './components/OptimizedImage'
 import ModalLoadingFallback from './components/ModalLoadingFallback'
@@ -32,16 +35,16 @@ const CampaignApplyModal = lazy(() => import('./components/CampaignApplyModal'))
 const ContactModal = lazy(() => import('./components/ContactModal'))
 
 export const CATEGORIES = [
-  'الكل',
-  'تكنولوجيا',
-  'موضة وأزياء',
-  'تجميل وعناية',
-  'طبخ وأكل',
-  'سفر وسياحة',
-  'رياضة ولياقة'
-]
+  'all',
+  'tech',
+  'fashion',
+  'beauty',
+  'food',
+  'travel',
+  'fitness'
+];
 
-import { isAdmin, isBrand, isCreator, canApplyToCampaign, canHireCreator, canAccessAdmin } from './utils/authGuards'
+import { isAdmin, isBrand, isCreator, canApplyToCampaign, canHireCreator, canAccessAdmin, canViewCreatorDirectory, canViewCampaignDirectory, canViewCreatorProfile } from './utils/authGuards'
 import {
   Search,
   Filter,
@@ -71,15 +74,6 @@ import {
   MessageSquare
 } from 'lucide-react'
 
-const ALGERIAN_WILAYAS = [
-  'الجزائر', 'وهران', 'قسنطينة', 'عنابة', 'سطيف', 'باتنة', 'البليدة', 'تلمسان', 
-  'بجاية', 'تيزي وزو', 'الشلف', 'بسكرة', 'تبسة', 'جيجل', 'سكيكدة', 'سيدي بلعباس', 
-  'مستغانم', 'المسيلة', 'معسكر', 'ورقلة', 'برج بوعريريج', 'بومرداس', 'الطارف', 
-  'تندوف', 'تيسمسيلت', 'الوادي', 'خنشلة', 'سوق أهراس', 'تيبازة', 'ميلة', 'عين الدفلى', 
-  'النعامة', 'عين تموشنت', 'غرداية', 'غليزان', 'تيميمون', 'برج باجي مختار', 'أولاد جلال', 
-  'بني عباس', 'إن صالح', 'إن قزام', 'تقرت', 'جانت', 'المغير', 'المنيعة'
-]
-
 function AppContent() {
   const { user } = useAuth()
   const isLoggedIn = !!user
@@ -99,32 +93,42 @@ function AppContent() {
 
   // Showcase Tab & Advanced Filters
   const [showcaseTab, setShowcaseTab] = useState('creators') // 'creators' | 'stores'
-  const [selectedCategory, setSelectedCategory] = useState('الكل')
+  const [selectedCategory, setSelectedCategory] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedWilaya, setSelectedWilaya] = useState('all')
   const [selectedPriceRange, setSelectedPriceRange] = useState('all')
+  const [selectedFollowerRange, setSelectedFollowerRange] = useState('all')
   const [selectedPlatform, setSelectedPlatform] = useState('all')
   const [sortBy, setSortBy] = useState('featured')
   const [showFiltersDrawer, setShowFiltersDrawer] = useState(false)
+  const [campaignSearchQuery, setCampaignSearchQuery] = useState('')
+  const [campaignCategory, setCampaignCategory] = useState('all')
+  const [campaignWilaya, setCampaignWilaya] = useState('all')
+  const [campaignBudgetRange, setCampaignBudgetRange] = useState('all')
+  const [campaignDeliverable, setCampaignDeliverable] = useState('all')
+  const [showCampaignFilters, setShowCampaignFilters] = useState(false)
 
   // Database State
   const [creators, setCreators] = useState([])
   const [stores, setStores] = useState([])
+  const [campaigns, setCampaigns] = useState([])
   const [loadingData, setLoadingData] = useState(true)
 
   // Fetch real data on mount
   useEffect(() => {
-    import('./services/dbService').then(({ getStoreProfiles, getCreatorProfiles }) => {
-      Promise.all([getStoreProfiles(), getCreatorProfiles()])
-        .then(([fetchedStores, fetchedCreators]) => {
+    import('./services/dbService').then(({ getStoreProfiles, getCreatorProfiles, getCampaigns }) => {
+      Promise.all([getStoreProfiles(), getCreatorProfiles(), getCampaigns()])
+        .then(([fetchedStores, fetchedCreators, fetchedCampaigns]) => {
           setStores(fetchedStores);
           setCreators(fetchedCreators);
+          setCampaigns(fetchedCampaigns);
           setLoadingData(false);
         })
         .catch(err => {
           console.error("Error fetching from DB:", err);
           setStores([]);
           setCreators([]);
+          setCampaigns([]);
           setLoadingData(false);
         });
     });
@@ -208,24 +212,57 @@ function AppContent() {
   useEffect(() => {
     if (user?.role === 'creator') {
       setShowcaseTab('stores');
-    } else if (user?.role === 'brand') {
+    } else if (user?.role === 'brand' || user?.role === 'admin') {
       setShowcaseTab('creators');
     }
   }, [user?.role]);
 
+  useEffect(() => {
+    if (!canViewCreatorDirectory(user) && showcaseTab === 'creators') setShowcaseTab('stores');
+    if (!canViewCampaignDirectory(user) && showcaseTab !== 'creators') setShowcaseTab('creators');
+  }, [user, showcaseTab]);
+
   // Handlers
   const handleOpenAuth = (mode = 'login', role = 'creator') => setAuthModal({ open: true, mode, role })
+  const isCategoryMatch = (itemCat, selected) => {
+    if (!selected || selected === 'all' || selected === t('catAll')) return true;
+    if (!itemCat) return false;
+    const lowerSel = selected.toLowerCase();
+    const catStr = (typeof itemCat === 'object' ? (itemCat.en || itemCat.ar || '') : itemCat).toLowerCase();
+    if (catStr === lowerSel) return true;
+    const mapped = CATEGORIES_MAP[catStr] || CATEGORIES_MAP[itemCat];
+    if (mapped) {
+      if (mapped.en.toLowerCase() === lowerSel || mapped.ar === selected || mapped.fr.toLowerCase() === lowerSel) return true;
+    }
+    const selObj = CATEGORIES_MAP[selected];
+    if (selObj) {
+      if (itemCat === selObj.ar || itemCat === selObj.en || itemCat === selObj.fr) return true;
+    }
+    return false;
+  };
+
+  const isWilayaMatch = (itemLoc, selected) => {
+    if (!selected || selected === 'all' || selected === t('allWilayas')) return true;
+    if (!itemLoc) return false;
+    const locStr = String(itemLoc).toLowerCase();
+    const selStr = String(selected).toLowerCase();
+    const locLocalized = getLocalizedWilaya(itemLoc, language).toLowerCase();
+    return locStr.includes(selStr) || selStr.includes(locStr) || locLocalized.includes(selStr) || selStr.includes(locLocalized);
+  };
+
   const handleCloseAuth = () => setAuthModal({ open: false, mode: 'login', role: 'creator' })
   const handleOpenDashboard = (tab = 'overview', type = null, contactId = null) => {
     if (tab === 'admin' && !canAccessAdmin(user)) {
-      setToast({ type: 'error', message: 'عذراً، لوحة الأدمن مخصصة للإدارة فقط.' });
+      setToast({ type: 'error', message: t('adminOnlyAccess') });
       return;
     }
     const resolvedType = type || (tab === 'create' || user?.role === 'brand' ? 'brand' : 'creator');
     setDashboardState({ open: true, tab, type: resolvedType, contactId });
   }
   const handleCloseDashboard = () => setDashboardState({ open: false, tab: 'overview', type: 'creator', contactId: null })
-  const handleSelectCreator = (creator) => setSelectedCreator(creator)
+  const handleSelectCreator = (creator) => {
+    if (canViewCreatorProfile(user, creator?.id)) setSelectedCreator(creator);
+  }
   const handleCloseCreator = () => setSelectedCreator(null)
   
   const handleContactCreator = (creator) => {
@@ -238,7 +275,7 @@ function AppContent() {
         console.warn('Could not save pending contact:', e);
       }
       handleOpenAuth('login', 'brand');
-      setToast({ type: 'info', message: 'يرجى تسجيل الدخول أو إنشاء حساب متجر للتواصل مع صانع المحتوى.' });
+      setToast({ type: 'info', message: t('loginAsStoreToContact') });
       return;
     }
     const dashboardType = (user?.role === 'brand' || user?.role === 'admin') ? 'brand' : 'creator';
@@ -256,7 +293,7 @@ function AppContent() {
           handleOpenDashboard('messages', 'brand', targetCreator.id);
           setToast({
             type: 'success',
-            message: `تم فتح المحادثة مع ${targetCreator.name || targetCreator.full_name || 'صانع المحتوى'}`
+            message: `${t('chatOpenedWith')} ${targetCreator.name || targetCreator.full_name || t('defaultCreatorName')}`
           });
         } catch (e) {
           sessionStorage.removeItem('pending_contact_creator');
@@ -285,7 +322,7 @@ function AppContent() {
 
       setToast({
         type: 'success',
-        message: 'تمت عملية الدفع بنجاح عبر Chargily Pay! 🎉 تم حجز الميزانية بأمان في حساب الضمان (Escrow).'
+        message: t('paymentSuccessToast')
       });
 
       if (pendingDetails?.creatorId) {
@@ -294,7 +331,7 @@ function AppContent() {
     } else if (paymentStatus === 'failed') {
       setToast({
         type: 'error',
-        message: 'تم إلغاء عملية الدفع عبر Chargily Pay أو فشلت المعاملة البنكية.'
+        message: t('paymentFailedToast')
       });
     }
 
@@ -310,16 +347,17 @@ function AppContent() {
       return;
     }
     if (!canHireCreator(user)) {
-      setToast({ type: 'error', message: 'فقط أصحاب المتاجر والعلامات التجارية يمكنهم توظيف صناع المحتوى.' });
+      setToast({ type: 'error', message: t('onlyStoresCanHire') });
       return;
     }
+    const creatorRate = Number(creator.ratePerPost || creator.rate_per_post || 0);
     setCheckoutData({
       creator,
       applicationId,
       campaign: {
-        title: `صفقة رعاية مع ${creator.name || creator.full_name}`,
-        budget: creator.ratePerPost || creator.rate_per_post || 25000,
-        deliverables: ['منشور على منصات التواصل', 'ستوري ترويجية', 'ذكر العلامة التجارية'],
+        title: `${t('dealWith')} ${creator.name || creator.full_name || t('defaultCreatorName')}`,
+        budget: creatorRate > 0 ? creatorRate : 10000,
+        deliverables: ['post', 'story', 'review'],
       },
     });
   }
@@ -333,12 +371,11 @@ function AppContent() {
   // Filtered creators with Multi-dimensional Search & Sort
   const filteredCreators = creators.filter((c) => {
     // 1. Category Filter
-    const rawCategory = (c.category && typeof c.category === 'object') ? c.category.ar : (c.category || '')
-    const matchCategory = selectedCategory === 'الكل' || rawCategory === selectedCategory
+    const matchCategory = isCategoryMatch(c.category, selectedCategory)
 
     // 2. Wilaya / Location Filter
     const creatorWilaya = c.wilaya || c.location || ''
-    const matchWilaya = selectedWilaya === 'all' || creatorWilaya.toLowerCase().includes(selectedWilaya.toLowerCase())
+    const matchWilaya = isWilayaMatch(creatorWilaya, selectedWilaya)
 
     // 3. Price / Rate Filter
     const rate = Number(c.rate_per_post || c.ratePerPost || 0)
@@ -347,6 +384,14 @@ function AppContent() {
     else if (selectedPriceRange === '15k-30k') matchPrice = rate >= 15000 && rate <= 30000
     else if (selectedPriceRange === '30k-60k') matchPrice = rate > 30000 && rate <= 60000
     else if (selectedPriceRange === 'above60k') matchPrice = rate > 60000
+
+    const followers = Object.values(c.followers || {}).reduce((total, value) => total + (Number(value) || 0), 0) ||
+      Number(c.total_followers || c.followers_count || 0)
+    let matchFollowers = true
+    if (selectedFollowerRange === 'under50k') matchFollowers = followers > 0 && followers < 50000
+    else if (selectedFollowerRange === '50k-250k') matchFollowers = followers >= 50000 && followers <= 250000
+    else if (selectedFollowerRange === '250k-1m') matchFollowers = followers > 250000 && followers <= 1000000
+    else if (selectedFollowerRange === 'above1m') matchFollowers = followers > 1000000
 
     // 4. Platform Filter
     let matchPlatform = true
@@ -357,6 +402,7 @@ function AppContent() {
     // 5. Search Query
     const nameText = getLocalizedItem(c, 'name', language) || c.full_name || ''
     const bioText = getLocalizedItem(c, 'bio', language) || c.bio || ''
+    const rawCategory = (c.category && typeof c.category === 'object') ? c.category.ar : (c.category || '')
     const categoryText = getLocalizedItem(c, 'category', language) || rawCategory
     const matchSearch =
       searchQuery === '' ||
@@ -365,7 +411,7 @@ function AppContent() {
       categoryText.toLowerCase().includes(searchQuery.toLowerCase()) ||
       creatorWilaya.toLowerCase().includes(searchQuery.toLowerCase())
 
-    return matchCategory && matchWilaya && matchPrice && matchPlatform && matchSearch
+    return matchCategory && matchWilaya && matchPrice && matchFollowers && matchPlatform && matchSearch
   }).sort((a, b) => {
     const rateA = Number(a.rate_per_post || a.ratePerPost || 0)
     const rateB = Number(b.rate_per_post || b.ratePerPost || 0)
@@ -378,37 +424,66 @@ function AppContent() {
     return 0 // 'featured'
   })
 
-  // Filtered stores
+  // Filtered stores and campaigns for creator accounts.
   const filteredStores = stores.filter((s) => {
     const rawSector = (s.sector && typeof s.sector === 'object') ? s.sector.ar : (s.sector || '')
-    const matchCategory = selectedCategory === 'الكل' || rawSector === selectedCategory
+    const matchCategory = isCategoryMatch(s.sector, campaignCategory)
     const nameText = getLocalizedItem(s, 'name', language) || s.brand_name || ''
     const bioText = getLocalizedItem(s, 'bio', language) || s.bio || ''
     const sectorText = getLocalizedItem(s, 'sector', language) || rawSector
     const locationText = getLocalizedItem(s, 'location', language) || s.wilaya || ''
     const matchSearch =
-      searchQuery === '' ||
-      nameText.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      bioText.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      sectorText.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      locationText.toLowerCase().includes(searchQuery.toLowerCase())
-    return matchCategory && matchSearch
+      campaignSearchQuery === '' ||
+      nameText.toLowerCase().includes(campaignSearchQuery.toLowerCase()) ||
+      bioText.toLowerCase().includes(campaignSearchQuery.toLowerCase()) ||
+      sectorText.toLowerCase().includes(campaignSearchQuery.toLowerCase()) ||
+      locationText.toLowerCase().includes(campaignSearchQuery.toLowerCase())
+    return matchCategory && isWilayaMatch(locationText, campaignWilaya) && matchSearch
+  })
+
+  const filteredCampaigns = campaigns.filter((campaign) => {
+    const budget = Number(campaign.budget) || 0
+    const campaignCategoryValue = campaign.category || campaign.sector
+    const campaignLocation = campaign.wilaya || campaign.location || campaign.brand?.wilaya || campaign.brand?.location || ''
+    const deliverables = campaign.deliverables?.[language] || campaign.deliverables?.ar || campaign.deliverables || []
+    const deliverableText = (Array.isArray(deliverables) ? deliverables : [deliverables]).join(' ').toLowerCase()
+    const title = getLocalizedItem(campaign, 'title', language) || ''
+    const description = getLocalizedItem(campaign, 'description', language) || ''
+    const brandName = campaign.brand?.brand_name || campaign.brand?.full_name || campaign.brand_name || ''
+    let matchBudget = true
+    if (campaignBudgetRange === 'under30k') matchBudget = budget > 0 && budget < 30000
+    else if (campaignBudgetRange === '30k-75k') matchBudget = budget >= 30000 && budget <= 75000
+    else if (campaignBudgetRange === 'above75k') matchBudget = budget > 75000
+    const matchDeliverable = campaignDeliverable === 'all' || deliverableText.includes(campaignDeliverable)
+    const normalizedSearch = campaignSearchQuery.toLowerCase()
+    return isCategoryMatch(campaignCategoryValue, campaignCategory) &&
+      isWilayaMatch(campaignLocation, campaignWilaya) &&
+      matchBudget &&
+      matchDeliverable &&
+      (!normalizedSearch || `${title} ${description} ${brandName} ${campaignLocation}`.toLowerCase().includes(normalizedSearch))
   })
 
   const resetAllFilters = () => {
-    setSelectedCategory('الكل')
+    setSelectedCategory('all')
     setSearchQuery('')
     setSelectedWilaya('all')
     setSelectedPriceRange('all')
+    setSelectedFollowerRange('all')
     setSelectedPlatform('all')
     setSortBy('featured')
+    setCampaignSearchQuery('')
+    setCampaignCategory('all')
+    setCampaignWilaya('all')
+    setCampaignBudgetRange('all')
+    setCampaignDeliverable('all')
   }
 
   const hasActiveFilters = 
-    selectedCategory !== 'الكل' || 
+    selectedCategory !== 'all' ||
     searchQuery !== '' || 
     selectedWilaya !== 'all' || 
     selectedPriceRange !== 'all' || 
+    selectedFollowerRange !== 'all' ||
     selectedPlatform !== 'all' || 
     sortBy !== 'featured'
 
@@ -419,13 +494,13 @@ function AppContent() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC]">
+    <div className={`min-h-screen bg-[#F8FAFC] ${isLoggedIn ? 'pb-24 md:pb-0' : ''}`}>
       {/* ─── Accessible Skip to Main Content Link ─── */}
       <a 
         href="#main-content" 
         className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:right-4 focus:z-[200] focus:px-4 focus:py-2 focus:bg-brand-orange focus:text-white focus:rounded-xl focus:font-bold focus:shadow-xl focus:outline-none"
       >
-        {t('skipToContent') || 'تخطي إلى المحتوى الرئيسي'}
+        {t('skipToContent')}
       </a>
 
       {/* ─── Toast Notification ─── */}
@@ -462,8 +537,8 @@ function AppContent() {
 
       {/* ─── Main Content Landmark ─── */}
       <main id="main-content">
-        {/* ─── Hero & How It Works — hidden when logged in ─── */}
-        {!isLoggedIn && (
+        {!isLoggedIn ? (
+          /* ─── VISITOR LANDING: Only website description & login/signup CTAs ─── */
           <>
             <Hero 
               onOpenAuth={handleOpenAuth} 
@@ -475,7 +550,7 @@ function AppContent() {
               <div className="max-w-5xl mx-auto text-center">
                 <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-orange-50 border border-brand-orange/20 text-brand-orange font-bold text-xs mb-3">
                   <Sparkles className="w-3.5 h-3.5" />
-                  <span>خطوات بسيطة وسريعة</span>
+                  <span>{t('howItWorksBadge')}</span>
                 </div>
                 <h2 id="how-it-works-heading" className="text-3xl sm:text-5xl font-black text-brand-navy mb-4 leading-relaxed">
                   {t('howItWorks')} <span className="text-brand-orange">{t('howItWorksHighlight')}</span>
@@ -511,16 +586,55 @@ function AppContent() {
                 </div>
               </div>
             </section>
-          </>
-        )}
 
-        {/* ─── Section 3: Clean Creators & Stores Showcase Grid ─── */}
-        <section id="creators" aria-labelledby="showcase-heading" className="py-20 px-4 bg-[#F8FAFC]">
+            {/* ─── Conversion & Value Call-to-Action ─── */}
+            <section className="py-20 px-4 bg-gradient-to-b from-white to-slate-100/70 border-b border-slate-200/80 text-center relative">
+              <div className="max-w-4xl mx-auto">
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 font-bold text-xs mb-5">
+                  <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                  <span>{t('ctaTrustBadge')}</span>
+                </div>
+                <h2 className="text-3xl sm:text-5xl font-black text-brand-navy mb-5 leading-tight">
+                  {t('ctaTitle')}
+                </h2>
+                <p className="text-slate-600 text-base sm:text-lg max-w-2xl mx-auto mb-10 leading-relaxed font-normal">
+                  {t('ctaSub')}
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                  <button
+                    onClick={() => handleOpenAuth('signup', 'brand')}
+                    className="btn-primary px-8 py-4 rounded-2xl font-bold text-base shadow-xl shadow-brand-orange/30 hover:scale-105 active:scale-95 transition-all flex items-center gap-2.5 w-full sm:w-auto justify-center"
+                  >
+                    <Building2 className="w-5 h-5" />
+                    <span>{t('joinBrand')}</span>
+                  </button>
+                  <button
+                    onClick={() => handleOpenAuth('signup', 'creator')}
+                    className="px-8 py-4 rounded-2xl font-bold text-base bg-brand-navy hover:bg-brand-navyDark text-white transition-all hover:scale-105 active:scale-95 flex items-center gap-2.5 w-full sm:w-auto justify-center shadow-lg"
+                  >
+                    <Sparkles className="w-5 h-5 text-brand-orange" />
+                    <span>{t('joinCreator')}</span>
+                  </button>
+                  <button
+                    onClick={() => handleOpenAuth('login')}
+                    className="px-8 py-4 rounded-2xl font-bold text-base bg-white border border-slate-200 hover:bg-slate-50 text-slate-800 transition-all w-full sm:w-auto"
+                  >
+                    <span>{t('login')}</span>
+                  </button>
+                </div>
+              </div>
+            </section>
+          </>
+        ) : (
+          /* ─── LOGGED IN APPLICATION: Full Marketplace Showcase ─── */
+          <>
+            {/* ─── Section 3: Clean Creators & Stores Showcase Grid ─── */}
+            <section id="creators" aria-labelledby="showcase-heading" className="py-20 px-4 bg-[#F8FAFC]">
           <div className="max-w-7xl mx-auto">
-            {/* Main Showcase Toggle Tabs (Creators vs Stores) */}
+            {/* Role-scoped marketplace tabs */}
             <div className="flex justify-center mb-10">
-              <div role="tablist" aria-label="أقسام المعرض" className="p-1.5 bg-white border border-slate-200/90 rounded-full flex gap-2 shadow-sm">
-                <button
+              <div role="tablist" aria-label={t('gallerySections')} className="p-1.5 bg-white border border-slate-200/90 rounded-full flex gap-2 shadow-sm">
+                {canViewCreatorDirectory(user) && <button
                   type="button"
                   role="tab"
                   id="tab-creators"
@@ -535,9 +649,9 @@ function AppContent() {
                 >
                   <Sparkles className="w-5 h-5" aria-hidden="true" />
                   <span>{t('tabCreators')}</span>
-                </button>
+                </button>}
 
-                <button
+                {canViewCampaignDirectory(user) && <button
                   type="button"
                   role="tab"
                   id="tab-stores"
@@ -552,11 +666,11 @@ function AppContent() {
                 >
                   <Building2 className="w-5 h-5" aria-hidden="true" />
                   <span>{t('tabStores')}</span>
-                </button>
+                </button>}
               </div>
             </div>
 
-            <div className="mb-10 text-center sm:text-right">
+            <div className={`mb-10 text-center ${language === 'ar' ? 'sm:text-right' : 'sm:text-left'}`}>
               <h2 id="showcase-heading" className="text-3xl sm:text-4xl font-black text-brand-brown mb-3 tracking-wide">
                 {showcaseTab === 'creators' ? t('featuredCreators') : t('featuredStores')}
               </h2>
@@ -565,174 +679,55 @@ function AppContent() {
               </p>
             </div>
 
-            {/* ─── Search & Category Bar ─── */}
-            <div className="bg-white border border-brand-border rounded-[28px] p-5 sm:p-6 mb-8 shadow-sm space-y-4">
-              <div className="flex flex-col md:flex-row gap-3">
-                {/* Search Box with Clear Button */}
-                <div className="relative flex-1">
-                  <label htmlFor="creator-search-input" className="sr-only">
-                    {t('searchPlaceholder') || 'البحث عن المبدعين والمتاجر'}
-                  </label>
-                  <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-brownLight" aria-hidden="true" />
-                  <input
-                    id="creator-search-input"
-                    type="text"
-                    placeholder={t('searchPlaceholder')}
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    aria-label={t('searchPlaceholder')}
-                    className="input-field pr-12 pl-10 w-full text-sm"
-                  />
-                  {searchQuery && (
-                    <button
-                      type="button"
-                      onClick={() => setSearchQuery('')}
-                      aria-label="مسح نص البحث"
-                      className="absolute left-3 top-1/2 -translate-y-1/2 p-1 text-brand-brownLight hover:text-brand-brown rounded-full"
-                    >
-                      <X className="w-4 h-4" aria-hidden="true" />
-                    </button>
-                  )}
-                </div>
-
-              {/* Advanced Filter Drawer Toggle */}
-              <button
-                onClick={() => setShowFiltersDrawer(!showFiltersDrawer)}
-                className={`px-5 py-3 rounded-full text-xs font-bold flex items-center justify-center gap-2 border transition-all ${
-                  showFiltersDrawer || hasActiveFilters
-                    ? 'bg-brand-orange text-white border-brand-orange shadow-md shadow-brand-orange/20'
-                    : 'bg-brand-cream text-brand-brown border-brand-border hover:border-brand-orange/40'
-                }`}
-              >
-                <SlidersHorizontal className="w-4 h-4" />
-                <span>{t('filters')}</span>
-                {hasActiveFilters && (
-                  <span className="w-2 h-2 rounded-full bg-white animate-pulse"></span>
-                )}
-              </button>
-
-              {/* Reset Filters Button */}
-              {hasActiveFilters && (
-                <button
-                  onClick={resetAllFilters}
-                  className="px-4 py-3 rounded-full text-xs font-bold text-red-500 bg-red-50 hover:bg-red-100 border border-red-200 transition-colors flex items-center justify-center gap-1.5"
-                  title={t('clearFilters')}
-                >
-                  <RotateCcw className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">{t('clearFilters')}</span>
-                </button>
-              )}
-            </div>
-
-            {/* Category Chips Bar */}
-            <div role="tablist" aria-label="تصنيفات المحتوى" className="flex gap-2 overflow-x-auto no-scrollbar pt-1 pb-1">
-              {CATEGORIES.map((cat) => {
-                const categoryLabels = {
-                  'الكل': t('catAll'),
-                  'تكنولوجيا': t('catTech'),
-                  'موضة وأزياء': t('catFashion'),
-                  'تجميل وعناية': t('catBeauty'),
-                  'طبخ وأكل': t('catFood'),
-                  'سفر وسياحة': t('catTravel'),
-                  'رياضة ولياقة': t('catFitness')
-                };
-                const isSelected = selectedCategory === cat;
-                return (
-                  <button
-                    key={cat}
-                    type="button"
-                    role="tab"
-                    aria-selected={isSelected}
-                    onClick={() => setSelectedCategory(cat)}
-                    className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all border shadow-sm ${
-                      isSelected
-                        ? 'bg-brand-brown text-white border-brand-brown'
-                        : 'bg-white text-brand-brownLight hover:bg-brand-cream hover:text-brand-brown border-brand-border'
-                    }`}
-                  >
-                    {categoryLabels[cat] || cat}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* ─── Expandable Advanced Filter Drawer ─── */}
-            {showFiltersDrawer && (
-              <div className="pt-4 border-t border-brand-border/80 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-in">
-                {/* Filter 1: Wilaya */}
-                <div>
-                  <label className="block text-[11px] font-bold text-brand-brown mb-1.5">{t('filterByWilaya')}</label>
-                  <select
-                    value={selectedWilaya}
-                    onChange={(e) => setSelectedWilaya(e.target.value)}
-                    className="input-field w-full text-xs py-2 bg-white"
-                  >
-                    <option value="all">{t('allWilayas')}</option>
-                    {ALGERIAN_WILAYAS.map((w) => (
-                      <option key={w} value={w}>{w}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Filter 2: Price / Rate */}
-                <div>
-                  <label className="block text-[11px] font-bold text-brand-brown mb-1.5">{t('filterByPrice')}</label>
-                  <select
-                    value={selectedPriceRange}
-                    onChange={(e) => setSelectedPriceRange(e.target.value)}
-                    className="input-field w-full text-xs py-2 bg-white"
-                  >
-                    <option value="all">{t('allPrices')}</option>
-                    <option value="under15k">{t('priceUnder15k')}</option>
-                    <option value="15k-30k">{t('price15kTo30k')}</option>
-                    <option value="30k-60k">{t('price30kTo60k')}</option>
-                    <option value="above60k">{t('priceAbove60k')}</option>
-                  </select>
-                </div>
-
-                {/* Filter 3: Platform */}
-                <div>
-                  <label className="block text-[11px] font-bold text-brand-brown mb-1.5">{t('filterByPlatform')}</label>
-                  <select
-                    value={selectedPlatform}
-                    onChange={(e) => setSelectedPlatform(e.target.value)}
-                    className="input-field w-full text-xs py-2 bg-white"
-                  >
-                    <option value="all">{t('allPlatforms')}</option>
-                    <option value="instagram">Instagram</option>
-                    <option value="tiktok">TikTok</option>
-                    <option value="youtube">YouTube</option>
-                  </select>
-                </div>
-
-                {/* Filter 4: Sort By */}
-                <div>
-                  <label className="block text-[11px] font-bold text-brand-brown mb-1.5">{t('sortBy')}</label>
-                  <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                    className="input-field w-full text-xs py-2 bg-white"
-                  >
-                    <option value="featured">{t('sortFeatured')}</option>
-                    <option value="rate-asc">{t('sortRateAsc')}</option>
-                    <option value="rate-desc">{t('sortRateDesc')}</option>
-                    <option value="name">{t('sortName')}</option>
-                  </select>
-                </div>
-              </div>
+            {showcaseTab === 'creators' ? (
+              <CreatorFilters
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                selectedCategory={selectedCategory}
+                onCategoryChange={setSelectedCategory}
+                selectedWilaya={selectedWilaya}
+                onWilayaChange={setSelectedWilaya}
+                selectedPriceRange={selectedPriceRange}
+                onPriceRangeChange={setSelectedPriceRange}
+                selectedFollowerRange={selectedFollowerRange}
+                onFollowerRangeChange={setSelectedFollowerRange}
+                selectedPlatform={selectedPlatform}
+                onPlatformChange={setSelectedPlatform}
+                sortBy={sortBy}
+                onSortChange={setSortBy}
+                showFilters={showFiltersDrawer}
+                onToggleFilters={() => setShowFiltersDrawer(!showFiltersDrawer)}
+                onReset={resetAllFilters}
+                hasActiveFilters={hasActiveFilters}
+                categories={CATEGORIES}
+              />
+            ) : (
+              <CampaignFilters
+                searchQuery={campaignSearchQuery}
+                onSearchChange={setCampaignSearchQuery}
+                selectedCategory={campaignCategory}
+                onCategoryChange={setCampaignCategory}
+                selectedWilaya={campaignWilaya}
+                onWilayaChange={setCampaignWilaya}
+                selectedBudgetRange={campaignBudgetRange}
+                onBudgetRangeChange={setCampaignBudgetRange}
+                selectedDeliverable={campaignDeliverable}
+                onDeliverableChange={setCampaignDeliverable}
+                showFilters={showCampaignFilters}
+                onToggleFilters={() => setShowCampaignFilters(!showCampaignFilters)}
+                onReset={resetAllFilters}
+                hasActiveFilters={Boolean(campaignSearchQuery || campaignCategory !== 'all' || campaignWilaya !== 'all' || campaignBudgetRange !== 'all' || campaignDeliverable !== 'all')}
+                categories={CATEGORIES}
+              />
             )}
-            
-
-          </div>
-
           {/* Tab 1: Creators Grid */}
           {showcaseTab === 'creators' && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredCreators.map((creator, index) => {
-                const creatorName = getLocalizedItem(creator, 'name', language) || creator.full_name || 'صانع محتوى'
+                const creatorName = getLocalizedItem(creator, 'name', language) || creator.full_name || t('defaultCreatorName')
                 const creatorAvatar = creator.avatar || creator.avatar_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=creator'
-                const creatorWilaya = creator.wilaya || creator.location || 'الجزائر'
-                const rate = creator.rate_per_post || creator.ratePerPost || 20000
+                const creatorWilaya = getLocalizedWilaya(creator.wilaya || creator.location, language)
+                const rate = Number(creator.rate_per_post || creator.ratePerPost || 0)
                 const isAboveFold = index < 4;
 
                 return (
@@ -740,7 +735,7 @@ function AppContent() {
                     key={creator.id}
                     tabIndex={0}
                     role="button"
-                    aria-label={`عرض تفاصيل ${creatorName}`}
+                    aria-label={`${t('viewDetailsOf')} ${creatorName}`}
                     onClick={() => handleSelectCreator(creator)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' || e.key === ' ') {
@@ -772,7 +767,7 @@ function AppContent() {
                             {creator.verified && <BadgeCheck className="w-4 h-4 text-brand-orange shrink-0" aria-hidden="true" />}
                           </h3>
                           <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
-                            <span className="truncate font-medium">{getLocalizedItem(creator, 'category', language) || 'مبدع'}</span>
+                            <span className="truncate font-medium">{getLocalizedCategory(creator.category, language) || t('creator')}</span>
                             <span>•</span>
                             <span className="flex items-center gap-0.5 shrink-0">
                               <MapPin className="w-3 h-3 text-slate-400" aria-hidden="true" />
@@ -784,7 +779,7 @@ function AppContent() {
 
                       {/* Bio */}
                       <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed mb-4 font-normal">
-                        {getLocalizedItem(creator, 'bio', language) || 'صانع محتوى رقمي متألق على منصات التواصل الاجتماعي.'}
+                        {getLocalizedItem(creator, 'bio', language) || t('defaultBio')}
                       </p>
 
                       {/* Social Platforms Row */}
@@ -811,9 +806,15 @@ function AppContent() {
                     <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
                       <div>
                         <span className="text-[10px] text-slate-400 font-medium block">{t('deliveryStartsAt')}</span>
-                        <span className="font-black text-brand-navy text-sm font-mono bg-orange-50 text-brand-orange border border-brand-orange/20 px-2.5 py-0.5 rounded-full">
-                          {formatDZD(rate, language)}
-                        </span>
+                        {rate > 0 ? (
+                          <span className="font-black text-brand-navy text-sm font-mono bg-orange-50 text-brand-orange border border-brand-orange/20 px-2.5 py-0.5 rounded-full">
+                            {formatDZD(rate, language)}
+                          </span>
+                        ) : (
+                          <span className="font-bold text-slate-600 text-xs bg-slate-100 px-2.5 py-0.5 rounded-full border border-slate-200">
+                            {t('negotiablePerCampaign')}
+                          </span>
+                        )}
                       </div>
                       
                       <div className="flex items-center gap-2">
@@ -823,7 +824,7 @@ function AppContent() {
                             e.stopPropagation();
                             handleContactCreator(creator);
                           }}
-                          aria-label={`تواصل مع ${creatorName}`}
+                          aria-label={`${t('creatorContact')} ${creatorName}`}
                           className="px-3 py-1.5 rounded-full bg-slate-100 hover:bg-brand-navy hover:text-white text-slate-700 text-xs font-bold transition-all border border-slate-200 flex items-center gap-1 shadow-sm"
                         >
                           <MessageSquare className="w-3.5 h-3.5" />
@@ -837,7 +838,7 @@ function AppContent() {
                           }}
                           onMouseEnter={preloadCheckoutModal}
                           onFocus={preloadCheckoutModal}
-                          aria-label={`توظيف ${creatorName}`}
+                          aria-label={`${t('creatorHire')} ${creatorName}`}
                           className="btn-primary px-3.5 py-1.5 rounded-full text-xs font-bold shadow-md shadow-brand-orange/25 transition-all hover:scale-105 active:scale-95"
                         >
                           {t('creatorHire')}
@@ -850,18 +851,56 @@ function AppContent() {
             </div>
           )}
 
-          {/* Tab 2: Stores & Small Businesses Grid */}
+          {/* Creator marketplace: campaigns and store profiles */}
           {showcaseTab === 'stores' && (
+            <div className="space-y-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
+              {filteredCampaigns.map((campaign) => {
+                const campaignTitle = getLocalizedItem(campaign, 'title', language) || t('defaultCampaignTitle')
+                const campaignDescription = getLocalizedItem(campaign, 'description', language)
+                const deliverables = campaign.deliverables?.[language] || campaign.deliverables?.ar || campaign.deliverables || []
+                const brandName = campaign.brand?.brand_name || campaign.brand?.full_name || campaign.brand_name || t('defaultStoreName')
+                return (
+                  <article key={`campaign-${campaign.id}`} className="bg-white border border-brand-orange/20 rounded-[32px] p-6 shadow-sm hover:shadow-xl transition-all flex flex-col">
+                    <div className="flex items-start justify-between gap-3 mb-4">
+                      <div>
+                        <span className="text-[10px] uppercase tracking-wider text-brand-orange font-black">{t('campaignOpportunity')}</span>
+                        <h3 className="font-bold text-brand-navy text-lg mt-1">{campaignTitle}</h3>
+                      </div>
+                      <span className="font-black text-brand-orange bg-orange-50 border border-brand-orange/20 px-3 py-1 rounded-full whitespace-nowrap">{formatDZD(campaign.budget || 0, language)}</span>
+                    </div>
+                    <p className="text-sm text-slate-600 line-clamp-3 leading-relaxed mb-4">{campaignDescription}</p>
+                    <div className="flex items-center justify-between text-xs text-slate-500 mb-4">
+                      <span>{brandName}</span>
+                      <span>{getLocalizedWilaya(campaign.wilaya || campaign.location || campaign.brand?.wilaya, language)}</span>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5 mb-5">
+                      {(Array.isArray(deliverables) ? deliverables : [deliverables]).slice(0, 3).map((deliverable, index) => <span key={index} className="px-2.5 py-1 rounded-md bg-brand-cream text-brand-brownLight text-[11px] border border-brand-border">{deliverable}</span>)}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (canApplyToCampaign(user)) setSelectedCampaignToApply(campaign)
+                        else setToast({ type: 'error', message: t('onlyCreatorsCanApplyMsg') })
+                      }}
+                      className="btn-primary w-full min-h-[46px] mt-auto"
+                    >
+                      {t('applyNow')}
+                    </button>
+                  </article>
+                )
+              })}
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredStores.map((store, index) => {
-                const storeName = getLocalizedItem(store, 'name', language) || store.brand_name || 'متجر';
+                const storeName = getLocalizedItem(store, 'name', language) || store.brand_name || t('defaultStoreName');
                 const isAboveFold = index < 4;
                 return (
                   <div
                     key={store.id}
                     tabIndex={0}
                     role="button"
-                    aria-label={`عرض تفاصيل ${storeName}`}
+                    aria-label={`${t('viewDetailsOf')} ${storeName}`}
                     onClick={() => setSelectedStore(store)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' || e.key === ' ') {
@@ -892,11 +931,11 @@ function AppContent() {
                             {store.verified && <BadgeCheck className="w-5 h-5 text-brand-orange shrink-0" aria-hidden="true" />}
                           </h3>
                           <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
-                            <span className="font-medium">{getLocalizedItem(store, 'sector', language)}</span>
+                            <span className="font-medium">{getLocalizedCategory(store.sector, language) || getLocalizedItem(store, 'sector', language)}</span>
                             <span>•</span>
                             <span className="flex items-center gap-0.5">
                               <MapPin className="w-3 h-3 text-slate-400" aria-hidden="true" />
-                              <span>{getLocalizedItem(store, 'location', language)}</span>
+                              <span>{getLocalizedWilaya(store.location || store.wilaya, language)}</span>
                             </span>
                           </div>
                         </div>
@@ -911,7 +950,7 @@ function AppContent() {
                       <div>
                         <span className="text-[10px] text-slate-400 uppercase tracking-wider block font-medium">{t('activeCampaignsCount')}</span>
                         <span className="font-bold text-brand-navy text-base">
-                          {(store.activeCampaigns || 0)} {language === 'ar' ? ((store.activeCampaigns || 0) === 1 ? 'حملة' : 'حملات') : (language === 'fr' ? 'campagnes' : 'campaigns')}
+                          {(store.activeCampaigns || 0)} {t('campaignsPlural')}
                         </span>
                       </div>
                       <div className="text-start">
@@ -923,10 +962,11 @@ function AppContent() {
               );
             })}
           </div>
+            </div>
         )}
 
-          {((showcaseTab === 'creators' && filteredCreators.length === 0) ||
-            (showcaseTab === 'stores' && filteredStores.length === 0)) && (
+        {((showcaseTab === 'creators' && filteredCreators.length === 0) ||
+          (showcaseTab === 'stores' && filteredStores.length === 0 && filteredCampaigns.length === 0)) && (
             <div className="text-center py-16 bg-white rounded-[32px] border border-brand-border p-8 shadow-sm">
               <Search className="w-12 h-12 text-brand-brownLight/40 mx-auto mb-3" />
               <h4 className="font-bold text-brand-brown text-lg mb-1">{t('noResults')}</h4>
@@ -942,6 +982,8 @@ function AppContent() {
           )}
         </div>
       </section>
+          </>
+        )}
       </main>
 
       {/* ─── Footer ─── */}
@@ -950,7 +992,8 @@ function AppContent() {
           if (!isLoggedIn) {
             handleOpenAuth('login');
           } else {
-            setShowcaseTab(tab);
+            const nextTab = tab === 'creators' && !canViewCreatorDirectory(user) ? 'stores' : tab;
+            setShowcaseTab(nextTab);
             setTimeout(() => {
               const el = document.getElementById('creators');
               if (el) el.scrollIntoView({ behavior: 'smooth' });
@@ -997,6 +1040,7 @@ function AppContent() {
           isOpen={!!selectedCreator}
           onClose={handleCloseCreator}
           creator={selectedCreator}
+          user={user}
           onHire={handleHireCreator}
           onContact={handleContactCreator}
         />
@@ -1004,12 +1048,13 @@ function AppContent() {
           isOpen={!!selectedStore}
           onClose={() => setSelectedStore(null)}
           store={selectedStore}
+          user={user}
           onApplyCampaign={(campaign) => {
             if (!isLoggedIn) {
               setSelectedStore(null);
               handleOpenAuth('signup', 'creator');
             } else if (!canApplyToCampaign(user)) {
-              setToast({ type: 'error', message: t('onlyCreatorsCanApply') || 'فقط صناع المحتوى يمكنهم التقديم على الحملات' });
+              setToast({ type: 'error', message: t('onlyCreatorsCanApplyMsg') });
             } else {
               setSelectedStore(null);
               setSelectedCampaignToApply(campaign);
@@ -1021,7 +1066,7 @@ function AppContent() {
           onClose={() => setSelectedCampaignToApply(null)}
           campaign={selectedCampaignToApply}
           onSuccess={() => {
-            setToast({ type: 'success', message: t('applicationSuccess') || 'تم إرسال طلب التقديم بنجاح! 🎉' });
+            setToast({ type: 'success', message: t('applicationSuccess') });
             handleOpenDashboard('opportunities');
           }}
         />
@@ -1047,21 +1092,37 @@ function AppContent() {
           onClose={() => setIsContactModalOpen(false)}
         />
 
-        {/* Floating Messenger Quick-Access Button for Logged-In Users */}
+        {/* Desktop-Only Floating Messenger Quick-Access Button for Logged-In Users */}
         {isLoggedIn && user && (
           <button
             type="button"
             onClick={() => handleOpenDashboard('messages', user.role === 'brand' ? 'brand' : 'creator')}
-            aria-label="فتح الرسائل والمحادثات"
-            title="الرسائل والمحادثات المباشرة"
-            className="fixed bottom-6 rtl:left-6 ltr:right-6 z-40 bg-gradient-to-r from-brand-orange to-amber-600 text-white p-3.5 sm:px-5 sm:py-3.5 rounded-full shadow-2xl hover:shadow-brand-orange/40 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 border-2 border-white/20 group"
+            aria-label={t('navMessages')}
+            title={t('navMessages')}
+            className="hidden md:flex fixed bottom-6 start-6 z-40 bg-gradient-to-r from-brand-orange to-amber-600 text-white p-3.5 sm:px-5 sm:py-3.5 rounded-full shadow-2xl hover:shadow-brand-orange/40 hover:scale-105 active:scale-95 transition-all items-center gap-2 border-2 border-white/20 group"
           >
             <div className="relative">
               <MessageSquare className="w-5 h-5 text-white animate-bounce-subtle" />
-              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-400 rounded-full ring-2 ring-white" />
+              <span className="absolute -top-1 -end-1 w-2.5 h-2.5 bg-emerald-400 rounded-full ring-2 ring-white" />
             </div>
-            <span className="font-bold text-sm hidden sm:inline">الرسائل والمحادثات</span>
+            <span className="font-bold text-sm hidden sm:inline">{t('navMessages')}</span>
           </button>
+        )}
+
+        {/* Dedicated Mobile Sticky Bottom Navigation (only when logged in) */}
+        {isLoggedIn && (
+          <BottomNav
+            user={user}
+            currentTab={dashboardState.open ? dashboardState.tab : showcaseTab}
+            onSelectTab={(tab) => {
+              const nextTab = tab === 'creators' && !canViewCreatorDirectory(user) ? 'stores' : tab;
+              setShowcaseTab(nextTab);
+              const el = document.getElementById('creators') || document.getElementById('main-content');
+              if (el) el.scrollIntoView({ behavior: 'smooth' });
+            }}
+            onOpenDashboard={handleOpenDashboard}
+            onOpenAuth={handleOpenAuth}
+          />
         )}
       </Suspense>
     </div>

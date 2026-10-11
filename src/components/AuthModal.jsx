@@ -7,7 +7,7 @@ import { validatePasswordStrength } from '../utils/validators';
 
 const AuthModal = ({ isOpen, onClose, initialMode = 'login', initialRole = 'creator' }) => {
   const { user, updateRole, loginDevUser } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [mode, setMode] = useState(initialMode); // 'login' | 'signup' | 'select_role' | 'forgot_password' | 'update_password'
   const [role, setRole] = useState(initialRole);
   const [email, setEmail] = useState('');
@@ -139,13 +139,13 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login', initialRole = 'crea
           throw new Error(passCheck.error);
         }
         if (password !== confirmPassword) {
-          throw new Error('كلمتا المرور غير متطابقتين.');
+          throw new Error(t('passwordsDoNotMatch'));
         }
 
         const { error: updateError } = await supabase.auth.updateUser({ password });
         if (updateError) throw updateError;
         
-        setSuccessMsg('تم تحديث كلمة المرور بنجاح! يمكنك الآن تسجيل الدخول.');
+        setSuccessMsg(t('passwordUpdatedSuccess'));
         setTimeout(() => setMode('login'), 2000);
         return;
       }
@@ -157,9 +157,9 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login', initialRole = 'crea
         });
         if (loginError) {
           if (loginError.message?.toLowerCase().includes('invalid login credentials')) {
-            throw new Error('البريد الإلكتروني أو كلمة المرور غير صحيحة.');
+            throw new Error(t('invalidCredentials'));
           } else if (loginError.message?.toLowerCase().includes('email not confirmed')) {
-            throw new Error('يرجى تأكيد بريدك الإلكتروني عبر الرابط المرسل إليك أولاً.');
+            throw new Error(t('confirmEmailFirst'));
           }
           throw loginError;
         }
@@ -170,7 +170,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login', initialRole = 'crea
           throw new Error(passCheck.error);
         }
         if (password !== confirmPassword) {
-          throw new Error('كلمتا المرور غير متطابقتين.');
+          throw new Error(t('passwordsDoNotMatch'));
         }
 
         const { data, error: signupError } = await supabase.auth.signUp({ 
@@ -225,14 +225,14 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login', initialRole = 'crea
       <div 
         className="modal-content relative w-full max-w-md p-6 sm:p-8 animate-fade-in-up shadow-2xl" 
         onClick={(e) => e.stopPropagation()}
-        dir="rtl"
+        dir={language === 'ar' ? 'rtl' : 'ltr'}
       >
         <button 
           type="button"
           onClick={onClose}
-          aria-label="إغلاق النافذة"
-          className="absolute top-4 left-4 p-2 text-brand-brownLight hover:text-brand-brown rounded-full hover:bg-brand-cream transition-colors"
-          title="إغلاق"
+          aria-label={t('close')}
+          className="absolute top-4 start-4 p-2 text-brand-brownLight hover:text-brand-brown rounded-full hover:bg-brand-cream transition-colors"
+          title={t('close')}
         >
           <X className="w-5 h-5" aria-hidden="true" />
         </button>
@@ -387,10 +387,10 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login', initialRole = 'crea
             )}
 
             {typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (
-              <div className="mb-4 p-3 bg-amber-50/90 border border-amber-200 rounded-2xl text-right">
+              <div className="mb-4 p-3 bg-amber-50/90 border border-amber-200 rounded-2xl text-start">
                 <div className="flex items-center justify-between gap-2 mb-2">
                   <span className="text-[11px] font-black text-amber-900 flex items-center gap-1">
-                    <span>⚡ بيئة التطوير (Localhost) — دخول تجريبي سريع:</span>
+                    <span>{t('devEnvironmentQuickLogin')}</span>
                   </span>
                   <span className="text-[9px] bg-amber-200 text-amber-900 font-bold px-2 py-0.5 rounded-full">Dev Mode</span>
                 </div>
@@ -403,7 +403,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login', initialRole = 'crea
                     }}
                     className="py-2 px-2 rounded-xl bg-white hover:bg-amber-100/70 border border-amber-300 text-amber-900 text-xs font-bold transition-all text-center flex items-center justify-center gap-1 shadow-xs"
                   >
-                    <span>🛍️ متجر تجريبي</span>
+                    <span>{t('demoStore')}</span>
                   </button>
                   <button
                     type="button"
@@ -413,7 +413,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login', initialRole = 'crea
                     }}
                     className="py-2 px-2 rounded-xl bg-white hover:bg-amber-100/70 border border-amber-300 text-amber-900 text-xs font-bold transition-all text-center flex items-center justify-center gap-1 shadow-xs"
                   >
-                    <span>🎬 صانع محتوى</span>
+                    <span>{t('demoCreator')}</span>
                   </button>
                 </div>
               </div>
@@ -494,11 +494,11 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login', initialRole = 'crea
               {mode !== 'forgot_password' && (
                 <>
                   <div className="relative">
-                    <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-brownLight" />
+                    <Lock className="absolute start-3 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-brownLight" />
                     <input 
                       type={showPassword ? 'text' : 'password'} 
-                      placeholder={mode === 'update_password' ? 'كلمة المرور الجديدة' : t('authPassword')}
-                      className="input-field w-full pr-10 pl-10"
+                      placeholder={mode === 'update_password' ? t('newPassword') : t('authPassword')}
+                      className="input-field w-full pe-10 ps-10"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       disabled={loading}
@@ -508,8 +508,8 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login', initialRole = 'crea
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-brownLight hover:text-brand-brown focus:outline-none"
-                      title={showPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
+                      className="absolute end-3 top-1/2 -translate-y-1/2 text-brand-brownLight hover:text-brand-brown focus:outline-none"
+                      title={showPassword ? t('hidePassword') : t('showPassword')}
                     >
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
@@ -517,11 +517,11 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login', initialRole = 'crea
 
                   {(mode === 'signup' || mode === 'update_password') && (
                     <div className="relative">
-                      <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-brownLight" />
+                      <Lock className="absolute start-3 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-brownLight" />
                       <input 
                         type={showConfirmPassword ? 'text' : 'password'} 
-                        placeholder={mode === 'update_password' ? 'تأكيد كلمة المرور الجديدة' : 'تأكيد كلمة المرور'}
-                        className="input-field w-full pr-10 pl-10"
+                        placeholder={mode === 'update_password' ? t('confirmNewPassword') : t('confirmPassword')}
+                        className="input-field w-full pe-10 ps-10"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         disabled={loading}
@@ -531,8 +531,8 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login', initialRole = 'crea
                       <button
                         type="button"
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-brownLight hover:text-brand-brown focus:outline-none"
-                        title={showConfirmPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
+                        className="absolute end-3 top-1/2 -translate-y-1/2 text-brand-brownLight hover:text-brand-brown focus:outline-none"
+                        title={showConfirmPassword ? t('hidePassword') : t('showPassword')}
                       >
                         {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
@@ -564,11 +564,11 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login', initialRole = 'crea
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
                 ) : (
-                  (mode === 'forgot_password' && resetCooldown > 0) ? `أعد المحاولة بعد ${resetCooldown} ثانية` :
-                  (cooldown > 0) ? `انتظر ${cooldown}...` :
+                  (mode === 'forgot_password' && resetCooldown > 0) ? `${t('retryAfter')} ${resetCooldown}s` :
+                  (cooldown > 0) ? `${t('loading')} ${cooldown}...` :
                   mode === 'login' ? t('authLoginBtn') : 
                   mode === 'signup' ? t('authSignupBtn') : 
-                  mode === 'update_password' ? 'تحديث كلمة المرور' :
+                  mode === 'update_password' ? t('updatePassword') :
                   t('authSendResetLinkBtn')
                 )}
               </button>

@@ -134,26 +134,26 @@ export const getCreatorProfiles = async (forceRefresh = false) => {
     const creatorApps = allApplications.filter(a => a.creator_id === creator.id);
     const completedCount = creatorApps.filter(a => a.status === 'completed').length;
 
-    const igFollowers = creator.instagram_url ? 20000 : 0;
-    const ttFollowers = creator.tiktok_url ? 30000 : 0;
-    const ytFollowers = creator.youtube_url ? 25000 : 0;
+    const igFollowers = Number(creator.social_links?.instagram_followers) || 0;
+    const ttFollowers = Number(creator.social_links?.tiktok_followers) || 0;
+    const ytFollowers = Number(creator.social_links?.youtube_followers) || 0;
     const computedTotal = (igFollowers + ttFollowers + ytFollowers) || 0;
 
     return {
       ...creator,
       name: creator.full_name || 'Creator Name',
       avatar: creator.avatar_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=creator',
-      ratePerPost: Number(creator.rate_per_post) || 15000,
+      ratePerPost: Number(creator.rate_per_post) || 0,
       followers: { 
-        instagram: creator.social_links?.instagram_followers || igFollowers, 
-        tiktok: creator.social_links?.tiktok_followers || ttFollowers, 
-        youtube: creator.social_links?.youtube_followers || ytFollowers,
+        instagram: igFollowers, 
+        tiktok: ttFollowers, 
+        youtube: ytFollowers,
         total: computedTotal
       },
       location: creator.wilaya || 'الجزائر',
-      completedDeals: completedCount > 0 ? completedCount : (creator.completed_deals || 0),
-      rating: Number(creator.rating) || 5.0,
-      reviewCount: creator.review_count || completedCount,
+      completedDeals: completedCount > 0 ? completedCount : (Number(creator.completed_deals) || 0),
+      rating: creator.rating ? Number(creator.rating) : null,
+      reviewCount: Number(creator.review_count) || completedCount || 0,
       verified: creator.is_verified || false
     };
   });
@@ -941,8 +941,9 @@ export const getNotifications = async (userId) => {
 };
 
 export const subscribeToNotifications = (userId, onNotification) => {
+  const channelName = `notifications:${userId}:${Math.random().toString(36).slice(2, 7)}`;
   const subscription = supabase
-    .channel('public:notifications')
+    .channel(channelName)
     .on('postgres_changes', {
       event: 'INSERT',
       schema: 'public',

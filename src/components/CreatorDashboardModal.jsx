@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
-import { getLocalizedItem } from '../utils/localized';
+import { getLocalizedItem, getLocalizedCategory, getLocalizedDeliverable, getLocalizedStatus, getLocalizedWilaya, CATEGORIES_MAP } from '../utils/localized';
 import { formatDZD, getPaymentStatusConfig } from '../services/chargilyService';
 import CampaignApplyModal from './CampaignApplyModal';
 import StoreDetailsModal from './StoreDetailsModal';
@@ -29,15 +29,15 @@ export default function CreatorDashboardModal({ isOpen, onClose, initialTab = 'o
   const [campaigns, setCampaigns] = useState([]);
   const [selectedCampaignToApply, setSelectedCampaignToApply] = useState(null);
   const [opportunitySearch, setOpportunitySearch] = useState('');
-  const [opportunityCategory, setOpportunityCategory] = useState('الكل');
+  const [opportunityCategory, setOpportunityCategory] = useState('all');
 
   // Profile State
   const [profileData, setProfileData] = useState({
     fullName: user?.profile?.full_name || user?.user_metadata?.full_name || '',
-    category: user?.profile?.category || 'تكنولوجيا',
-    bio: user?.profile?.bio || user?.user_metadata?.bio || 'صانع محتوى جزائري مهتم بالتقنية وأسلوب الحياة.',
+    category: user?.profile?.category || 'tech',
+    bio: user?.profile?.bio || user?.user_metadata?.bio || '',
     ratePerPost: user?.profile?.rate_per_post || '25000',
-    wilaya: user?.profile?.wilaya || 'الجزائر',
+    wilaya: user?.profile?.wilaya || 'Alger',
     phone: user?.profile?.phone || '',
     instagramUrl: user?.profile?.instagram_url || 'https://instagram.com/creator_dz',
     tiktokUrl: user?.profile?.tiktok_url || 'https://tiktok.com/@creator_dz',
@@ -107,12 +107,12 @@ export default function CreatorDashboardModal({ isOpen, onClose, initialTab = 'o
   const handleSubmitDeliverable = async (applicationId) => {
     const rawUrl = deliverableUrls[applicationId];
     if (!rawUrl || !rawUrl.trim()) {
-      alert('يرجى إدخال رابط العمل المسلّم');
+      alert(t('enterDeliverableLinkAlert'));
       return;
     }
     const urlCheck = validateUrl(rawUrl);
     if (!urlCheck.isValid) {
-      alert(urlCheck.error || 'يرجى إدخال رابط صالح (مثل: رابط Google Drive أو Instagram Reel)');
+      alert(urlCheck.error || t('enterValidUrlAlert'));
       return;
     }
     const url = urlCheck.normalized;
@@ -124,8 +124,8 @@ export default function CreatorDashboardModal({ isOpen, onClose, initialTab = 'o
       if (app && app.campaign?.brand_id) {
         await createNotification(
           app.campaign.brand_id,
-          'تم استلام العمل',
-          `قام ${user?.user_metadata?.full_name || 'صانع المحتوى'} بتسليم العمل لحملة "${app.campaign.title}". يرجى المراجعة.`
+          t('workSubmittedAlert'),
+          `${user?.user_metadata?.full_name || t('roleCreator')} - ${app.campaign.title}`
         );
       }
 
@@ -136,7 +136,7 @@ export default function CreatorDashboardModal({ isOpen, onClose, initialTab = 'o
       setTimeout(() => setSavedSuccess(false), 3000);
     } catch (err) {
       console.error("Error submitting deliverable:", err);
-      alert('حدث خطأ أثناء تسليم العمل. يرجى المحاولة مرة أخرى.');
+      alert(t('workSubmitErrorAlert'));
     }
   };
 
@@ -167,8 +167,8 @@ export default function CreatorDashboardModal({ isOpen, onClose, initialTab = 'o
       if (conv?.id) {
         contactsMap.set(conv.id, {
           id: conv.id,
-          brand_name: conv.brand_name || conv.full_name || 'متجر',
-          full_name: conv.full_name || conv.brand_name || 'متجر',
+          brand_name: conv.brand_name || conv.full_name || t('defaultStoreName'),
+          full_name: conv.full_name || conv.brand_name || t('defaultStoreName'),
           avatar_url: conv.avatar_url || '',
           category: conv.category || '',
           wilaya: conv.wilaya || '',
@@ -186,13 +186,13 @@ export default function CreatorDashboardModal({ isOpen, onClose, initialTab = 'o
         if (!contactsMap.has(brandId)) {
           contactsMap.set(brandId, {
             id: brandId,
-            brand_name: app.campaign.brand?.brand_name || app.campaign.brand?.full_name || 'متجر',
-            full_name: app.campaign.brand?.full_name || app.campaign.brand?.brand_name || 'متجر',
+            brand_name: app.campaign.brand?.brand_name || app.campaign.brand?.full_name || t('defaultStoreName'),
+            full_name: app.campaign.brand?.full_name || app.campaign.brand?.brand_name || t('defaultStoreName'),
             avatar_url: app.campaign.brand?.avatar_url || '',
             category: app.campaign.brand?.category || '',
             wilaya: app.campaign.brand?.wilaya || '',
             is_verified: Boolean(app.campaign.brand?.is_verified),
-            lastMessage: `حملة: ${app.campaign.title || ''}`,
+            lastMessage: `${t('navCampaigns')}: ${app.campaign.title || ''}`,
             lastMessageAt: app.created_at
           });
         }
@@ -205,13 +205,13 @@ export default function CreatorDashboardModal({ isOpen, onClose, initialTab = 'o
       if (activeContactProfile && activeContactProfile.id === targetContactId) {
         contactsMap.set(targetContactId, {
           id: targetContactId,
-          brand_name: activeContactProfile.brand_name || activeContactProfile.full_name || 'متجر',
-          full_name: activeContactProfile.full_name || activeContactProfile.brand_name || 'متجر',
+          brand_name: activeContactProfile.brand_name || activeContactProfile.full_name || t('defaultStoreName'),
+          full_name: activeContactProfile.full_name || activeContactProfile.brand_name || t('defaultStoreName'),
           avatar_url: activeContactProfile.avatar_url || '',
           category: activeContactProfile.category || '',
           wilaya: activeContactProfile.wilaya || '',
           is_verified: Boolean(activeContactProfile.is_verified),
-          lastMessage: 'محادثة مباشرة مع المتجر',
+          lastMessage: t('directChatWithStore'),
           lastMessageAt: new Date().toISOString()
         });
       }
@@ -222,13 +222,13 @@ export default function CreatorDashboardModal({ isOpen, onClose, initialTab = 'o
       if (store?.id && !contactsMap.has(store.id) && store.id !== user?.id) {
         contactsMap.set(store.id, {
           id: store.id,
-          brand_name: store.brand_name || store.name || store.full_name || 'متجر',
-          full_name: store.full_name || store.brand_name || store.name || 'متجر',
+          brand_name: store.brand_name || store.name || store.full_name || t('defaultStoreName'),
+          full_name: store.full_name || store.brand_name || store.name || t('defaultStoreName'),
           avatar_url: store.avatar_url || store.logo || '',
-          category: store.category || store.sector || 'متجر معتمد',
+          category: store.category || store.sector || t('certifiedStore'),
           wilaya: store.wilaya || store.location || '',
           is_verified: Boolean(store.is_verified ?? true),
-          lastMessage: 'متجر معتمد متاح للرعاية والتعاون 🛍️',
+          lastMessage: t('certifiedStore'),
           lastMessageAt: null
         });
       }
@@ -316,7 +316,7 @@ export default function CreatorDashboardModal({ isOpen, onClose, initialTab = 'o
     
     const msgCheck = validateChatMessage(chatMessage);
     if (!msgCheck.isValid) {
-      setChatError(msgCheck.error || 'الرسالة غير صالحة');
+      setChatError(msgCheck.error || t('invalidDataAlert'));
       return;
     }
     
@@ -367,7 +367,7 @@ export default function CreatorDashboardModal({ isOpen, onClose, initialTab = 'o
       // Remove optimistic message and show error in UI
       setMessages(prev => prev.filter(m => m.id !== optimisticMsg.id));
       setChatMessage(msgText);
-      setChatError(`خطأ: ${err?.message || err?.code || 'فشل إرسال الرسالة'} — Code: ${err?.code || 'unknown'}`);
+      setChatError(`${t('errorMessage')}: ${err?.message || err?.code || ''}`);
     }
   };
 
@@ -429,7 +429,7 @@ export default function CreatorDashboardModal({ isOpen, onClose, initialTab = 'o
 
     let sanitizedRate = profileData.ratePerPost;
     if (sanitizedRate) {
-      const rateCheck = validateAmount(sanitizedRate, { min: 500, max: 2000000, fieldName: 'سعر المنشور' });
+      const rateCheck = validateAmount(sanitizedRate, { min: 500, max: 2000000, fieldName: t('creatorRate') });
       if (!rateCheck.isValid) {
         alert(rateCheck.error);
         return;
@@ -497,8 +497,8 @@ export default function CreatorDashboardModal({ isOpen, onClose, initialTab = 'o
         // Notify creator
         await createNotification(
           user.id,
-          'تم استلام طلب السحب بنجاح 💸',
-          `طلب سحب مبلغ ${amount.toLocaleString('ar-DZ')} د.ج إلى الحساب (${cleanedRip.slice(-4)}) قيد المعالجة.`
+          t('payoutReceivedAlert'),
+          `${t('payoutToAccountTitle')}: ${formatDZD(amount, language)} (${cleanedRip.slice(-4)})`
         );
       }
 
@@ -506,7 +506,7 @@ export default function CreatorDashboardModal({ isOpen, onClose, initialTab = 'o
       setLocalTransactions(prev => [{
         id: `TX-${Date.now()}`,
         date: new Date().toISOString().split('T')[0],
-        description: `طلب سحب أرباح (${payoutForm.method === 'baridimob' ? 'BaridiMob' : 'CCP'})`,
+        description: `${t('payoutToAccountTitle')} (${payoutForm.method === 'baridimob' ? 'BaridiMob' : 'CCP'})`,
         amount: amount,
         status: 'pending'
       }, ...prev]);
@@ -518,7 +518,7 @@ export default function CreatorDashboardModal({ isOpen, onClose, initialTab = 'o
       }, 4000);
     } catch (err) {
       console.error('Error submitting payout request:', err);
-      setPayoutError('حدث خطأ أثناء معالجة طلب السحب. يرجى المحاولة لاحقاً.');
+      setPayoutError(t('payoutErrorAlert'));
     } finally {
       setPayoutLoading(false);
     }
@@ -541,8 +541,8 @@ export default function CreatorDashboardModal({ isOpen, onClose, initialTab = 'o
         if (campaign && campaign.brand_id) {
            await createNotification(
              campaign.brand_id,
-             'طلب تقديم جديد',
-             `قام ${user?.user_metadata?.full_name || 'صانع محتوى'} بالتقديم على حملتك "${campaign.title}".`
+             t('newApplicationAlert'),
+             `${user?.user_metadata?.full_name || t('roleCreator')} - ${campaign.title}`
            );
         }
       } catch (err) {
@@ -559,7 +559,7 @@ export default function CreatorDashboardModal({ isOpen, onClose, initialTab = 'o
       role="dialog"
       aria-modal="true"
       aria-labelledby="creator-dashboard-title"
-      dir="rtl"
+      dir={language === 'ar' ? 'rtl' : 'ltr'}
     >
       {/* Header Bar */}
       <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b border-brand-border px-4 sm:px-8 py-4 flex justify-between items-center shadow-sm">
@@ -572,14 +572,14 @@ export default function CreatorDashboardModal({ isOpen, onClose, initialTab = 'o
               {t('creatorDashboard')}
               <span className="px-3 py-1 rounded-full bg-brand-orange/10 text-brand-orange text-xs font-bold">{t('roleCreator')}</span>
             </h2>
-            <p className="text-xs font-medium text-brand-brownLight">{t('welcomeUser')}، {user?.user_metadata?.full_name || t('roleCreator')}</p>
+            <p className="text-xs font-medium text-brand-brownLight">{t('welcomeUser')}, {user?.user_metadata?.full_name || t('roleCreator')}</p>
           </div>
         </div>
 
         <button 
           type="button"
           onClick={onClose}
-          aria-label="إغلاق لوحة تحكم صانع المحتوى"
+          aria-label={t('close')}
           className="p-2 text-brand-brownLight hover:text-brand-brown rounded-full hover:bg-brand-cream transition-colors"
         >
           <X className="w-6 h-6" aria-hidden="true" />
@@ -589,11 +589,11 @@ export default function CreatorDashboardModal({ isOpen, onClose, initialTab = 'o
       {/* Main Container */}
       <div className="max-w-7xl mx-auto px-4 sm:px-8 py-8">
         {/* Navigation Tabs */}
-        <div role="tablist" aria-label="أقسام لوحة التحكم" className="flex gap-2 overflow-x-auto no-scrollbar pb-4 mb-8 border-b border-brand-border">
+        <div role="tablist" aria-label={t('dashOverview')} className="flex gap-2 overflow-x-auto no-scrollbar pb-4 mb-8 border-b border-brand-border">
           {[
             { id: 'overview', label: t('dashOverview'), icon: LayoutDashboard },
             { id: 'opportunities', label: t('dashOpportunities'), icon: Briefcase },
-            { id: 'messages', label: 'الرسائل والمحادثات', icon: MessageSquare },
+            { id: 'messages', label: t('navMessages'), icon: MessageSquare },
             { id: 'profile', label: t('dashProfile'), icon: User },
             { id: 'wallet', label: `${t('dashWallet')} 💰`, icon: Wallet },
           ].map((tab) => {
@@ -630,9 +630,9 @@ export default function CreatorDashboardModal({ isOpen, onClose, initialTab = 'o
           const pendingEscrowRevenue = applications
             .filter(a => a.status === 'approved' || a.status === 'submitted')
             .reduce((sum, a) => sum + (Number(a.campaign?.budget) || 0), 0);
-          const creatorEngagement = user?.profile?.engagement || (applications.length > 0 ? 5.6 : 0);
-          const creatorRating = Number(user?.profile?.rating) || 5.0;
-          const reviewsCount = user?.profile?.review_count || completedDealsCount;
+          const creatorEngagement = Number(user?.profile?.engagement) || 0;
+          const creatorRating = user?.profile?.rating ? Number(user.profile.rating) : null;
+          const reviewsCount = Number(user?.profile?.review_count) || completedDealsCount;
 
           return (
             <div className="space-y-8 animate-fade-in">
@@ -640,66 +640,64 @@ export default function CreatorDashboardModal({ isOpen, onClose, initialTab = 'o
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div className="bg-white border border-brand-border rounded-[24px] p-6 shadow-sm">
                   <div className="flex justify-between items-start mb-4">
-                    <span className="text-brand-brownLight text-sm font-bold">{t('totalCampaigns') || 'إجمالي الحملات'}</span>
+                    <span className="text-brand-brownLight text-sm font-bold">{t('totalCampaignsApplied')}</span>
                     <div className="p-2 bg-brand-cream text-brand-orange rounded-xl"><Briefcase className="w-5 h-5" /></div>
                   </div>
                   <div className="text-3xl font-black text-brand-brown font-mono">
                     {totalCampaignsApplied}
                     <span className="text-sm font-bold text-brand-brownLight mr-2">
-                      {language === 'ar' ? (totalCampaignsApplied === 1 ? 'حملة' : 'حملات') : 'campaigns'}
+                      {t('campaignsUnit')}
                     </span>
                   </div>
                   <p className="text-xs font-bold text-emerald-600 mt-2">
-                    {activeDealsCount > 0 
-                      ? `🟢 ${activeDealsCount} ${language === 'ar' ? (activeDealsCount === 1 ? 'صفقة جارية في الضمان' : 'صفقات جارية في الضمان') : 'active in escrow'}`
-                      : (totalCampaignsApplied > 0 ? 'بانتظار موافقة المتاجر' : 'تصفح فرص الرعاية وقدم الآن')}
+                    {activeDealsCount > 0 ? `🟢 ${activeDealsCount} ${t('activeInEscrowDeals')}` : (totalCampaignsApplied > 0 ? t('awaitingBrandApproval') : t('browseOpportunitiesNow'))}
                   </p>
                 </div>
 
                 <div className="bg-white border border-brand-border rounded-[24px] p-6 shadow-sm">
                   <div className="flex justify-between items-start mb-4">
-                    <span className="text-brand-brownLight text-sm font-bold">{t('revenue') || 'الإيرادات المحققة'}</span>
+                    <span className="text-brand-brownLight text-sm font-bold">{t('revenueEarned')}</span>
                     <div className="p-2 bg-emerald-50 text-emerald-500 rounded-xl"><DollarSign className="w-5 h-5" /></div>
                   </div>
                   <div className="text-3xl font-black text-brand-orange font-mono">{formatDZD(totalEarnedRevenue, language)}</div>
                   <p className="text-xs font-medium text-brand-brownLight mt-2">
-                    {pendingEscrowRevenue > 0 
-                      ? `+ ${formatDZD(pendingEscrowRevenue, language)} قيد الإنجاز بالضمان`
-                      : 'محولة عبر الذهبية و CIB و BaridiMob'}
+                    {pendingEscrowRevenue > 0 ? `+ ${formatDZD(pendingEscrowRevenue, language)} ${t('inProgressInEscrowProgress')}` : t('transferredViaCards')}
                   </p>
                 </div>
 
                 <div className="bg-white border border-brand-border rounded-[24px] p-6 shadow-sm">
                   <div className="flex justify-between items-start mb-4">
-                    <span className="text-brand-brownLight text-sm font-bold">{t('engagementRate') || 'نسبة التفاعل'}</span>
+                    <span className="text-brand-brownLight text-sm font-bold">{t('engagementRate')}</span>
                     <div className="p-2 bg-purple-50 text-purple-500 rounded-xl"><TrendingUp className="w-5 h-5" /></div>
                   </div>
                   <div className="text-3xl font-black text-purple-600 font-mono">
                     {creatorEngagement > 0 ? `${creatorEngagement}%` : '—'}
                   </div>
                   <p className="text-xs font-bold text-purple-500 mt-2">
-                    {creatorEngagement > 0 ? 'معدل التفاعل على المنصات' : 'اربط حساباتك الاجتماعية'}
+                    {creatorEngagement > 0 ? t('platformEngagementRate') : t('connectSocialAccounts')}
                   </p>
                 </div>
 
                 <div className="bg-white border border-brand-border rounded-[24px] p-6 shadow-sm">
                   <div className="flex justify-between items-start mb-4">
-                    <span className="text-brand-brownLight text-sm font-bold">{t('rating') || 'التقييم'}</span>
+                    <span className="text-brand-brownLight text-sm font-bold">{t('rating')}</span>
                     <div className="p-2 bg-amber-50 text-amber-500 rounded-xl"><Star className="w-5 h-5 fill-amber-500" /></div>
                   </div>
-                  <div className="text-3xl font-black text-amber-600 font-mono">{creatorRating.toFixed(1)} / 5.0</div>
+                  <div className="text-3xl font-black text-amber-600 font-mono">
+                    {creatorRating && reviewsCount > 0 ? `${creatorRating.toFixed(1)} / 5.0` : '—'}
+                  </div>
                   <p className="text-xs font-medium text-brand-brownLight mt-2">
-                    {reviewsCount > 0 ? `من ${reviewsCount} علامة تجارية` : 'تقييم موثوق للمنصة'}
+                    {reviewsCount > 0 && creatorRating ? `${reviewsCount} ${t('fromBrands')}` : t('noReviewsYetBadge')}
                   </p>
                 </div>
               </div>
 
             {/* Applications List */}
             <div className="bg-white border border-brand-border rounded-[24px] p-6 shadow-sm">
-              <h3 className="text-lg font-black text-brand-brown mb-4">طلبك الأخير للحملات</h3>
+              <h3 className="text-lg font-black text-brand-brown mb-4">{t('recentCampaignApplications')}</h3>
               <div className="space-y-4">
                 {applications.length === 0 ? (
-                  <div className="text-center font-medium text-brand-brownLight text-sm mt-4">لم تقدم على أي حملة بعد.</div>
+                  <div className="text-center font-medium text-brand-brownLight text-sm mt-4">{t('noApplicationsYet')}</div>
                 ) : (
                   applications.slice(0, 3).map((app) => (
                     <div key={app.id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 rounded-[16px] bg-brand-cream border border-brand-border gap-4">
@@ -715,7 +713,7 @@ export default function CreatorDashboardModal({ isOpen, onClose, initialTab = 'o
                         />
                         <div>
                           <h4 className="font-bold text-brand-brown">{app.campaign?.title}</h4>
-                          <p className="text-xs font-medium text-brand-brownLight mt-0.5">الميزانية: <span className="text-brand-orange font-bold">{formatDZD(app.campaign?.budget)}</span></p>
+                          <p className="text-xs font-medium text-brand-brownLight mt-0.5">{t('budgetLabel')} <span className="text-brand-orange font-bold">{formatDZD(app.campaign?.budget, language)}</span></p>
                         </div>
                       </div>
                       <span className={`px-4 py-1.5 rounded-full text-xs font-black border ${
@@ -723,7 +721,7 @@ export default function CreatorDashboardModal({ isOpen, onClose, initialTab = 'o
                           ? 'bg-blue-50 text-blue-600 border-blue-200'
                           : 'bg-amber-50 text-amber-600 border-amber-200'
                       }`}>
-                        {app.status === 'approved' ? 'مقبول' : app.status === 'completed' ? 'منتهي' : 'قيد المراجعة'}
+                        {getLocalizedStatus(app.status, language)}
                       </span>
                     </div>
                   ))
@@ -736,22 +734,22 @@ export default function CreatorDashboardModal({ isOpen, onClose, initialTab = 'o
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-black text-brand-brown flex items-center gap-2">
                   <MessageSquare className="w-5 h-5 text-brand-orange" />
-                  <span>رسائل ومحادثات المتاجر</span>
+                  <span>{t('storeMessagesAndChats')}</span>
                 </h3>
                 <button
                   type="button"
                   onClick={() => setActiveTab('messages')}
                   className="text-xs font-bold text-brand-orange hover:underline flex items-center gap-1"
                 >
-                  عرض كافة المحادثات ({contacts.length}) ←
+                  {t('viewAllChatsCount')} ({contacts.length}) {language === 'ar' ? '←' : '→'}
                 </button>
               </div>
 
               <div className="space-y-3">
                 {contacts.length === 0 ? (
                   <div className="p-6 text-center text-brand-brownLight bg-brand-cream/40 rounded-2xl border border-brand-border/60">
-                    <p className="font-bold text-sm text-brand-brown mb-1">لا توجد رسائل جديدة حالياً</p>
-                    <p className="text-xs text-brand-brownLight">عندما يتواصل معك أي متجر لبدء حملة، ستظهر رسالته هنا مباشرة.</p>
+                    <p className="font-bold text-sm text-brand-brown mb-1">{t('noNewMessagesCurrently')}</p>
+                    <p className="text-xs text-brand-brownLight">{t('storeContactHint')}</p>
                   </div>
                 ) : (
                   contacts.slice(0, 3).map((contact) => (
@@ -771,11 +769,11 @@ export default function CreatorDashboardModal({ isOpen, onClose, initialTab = 'o
                         />
                         <div className="min-w-0">
                           <h4 className="font-bold text-brand-brown text-sm flex items-center gap-1.5 truncate">
-                            <span>{contact.brand_name || contact.full_name || 'متجر'}</span>
+                            <span>{contact.brand_name || contact.full_name || t('defaultStoreName')}</span>
                             {contact.is_verified && <BadgeCheck className="w-4 h-4 text-brand-orange shrink-0" />}
                           </h4>
                           <p className="text-xs font-medium text-brand-brownLight mt-0.5 truncate max-w-md">
-                            {contact.lastMessage || 'محادثة مباشرة مع المتجر'}
+                            {contact.lastMessage || t('directChatWithStore')}
                           </p>
                         </div>
                       </div>
@@ -788,7 +786,7 @@ export default function CreatorDashboardModal({ isOpen, onClose, initialTab = 'o
                         className="btn-primary text-xs !py-2 !px-4 flex items-center gap-1.5 shrink-0"
                       >
                         <MessageSquare className="w-3.5 h-3.5" />
-                        <span>فتح المحادثة والرد</span>
+                        <span>{t('openChatAndReplyBtn')}</span>
                       </button>
                     </div>
                   ))
@@ -804,7 +802,7 @@ export default function CreatorDashboardModal({ isOpen, onClose, initialTab = 'o
           <div className="space-y-6 animate-fade-in">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
-                <h3 className="text-xl font-black text-brand-brown mb-1">فرص الرعاية المتاحة للتقديم</h3>
+                <h3 className="text-xl font-black text-brand-brown mb-1">{t('availableOpportunitiesHeading')}</h3>
                 <p className="text-brand-brownLight font-medium text-xs">{t('opportunitiesSub')}</p>
               </div>
             </div>
@@ -813,13 +811,13 @@ export default function CreatorDashboardModal({ isOpen, onClose, initialTab = 'o
             <div className="flex flex-col sm:flex-row gap-3">
               <input
                 type="text"
-                placeholder="ابحث في الحملات بالاسم أو المجال..."
+                placeholder={t('searchCampaignsPlaceholder')}
                 className="input-field text-xs flex-1 py-2.5 bg-white"
                 value={opportunitySearch}
                 onChange={(e) => setOpportunitySearch(e.target.value)}
               />
               <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-                {['الكل', 'تكنولوجيا', 'موضة وأزياء', 'تجميل وعناية', 'طبخ وأكل', 'سفر وسياحة'].map((cat) => (
+                {['all', 'tech', 'fashion', 'food', 'lifestyle', 'travel'].map((cat) => (
                   <button
                     key={cat}
                     onClick={() => setOpportunityCategory(cat)}
@@ -829,7 +827,7 @@ export default function CreatorDashboardModal({ isOpen, onClose, initialTab = 'o
                         : 'bg-white text-brand-brownLight border-brand-border hover:border-brand-orange/30'
                     }`}
                   >
-                    {cat}
+                    {getLocalizedCategory(cat, language)}
                   </button>
                 ))}
               </div>
@@ -838,7 +836,7 @@ export default function CreatorDashboardModal({ isOpen, onClose, initialTab = 'o
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {campaigns
                 .filter(c => {
-                  const matchCat = opportunityCategory === 'الكل' || c.category === opportunityCategory;
+                  const matchCat = opportunityCategory === 'all' || c.category === opportunityCategory || CATEGORIES_MAP[opportunityCategory]?.[language] === c.category || CATEGORIES_MAP[opportunityCategory]?.ar === c.category;
                   const title = (c.title || '').toLowerCase();
                   const desc = (c.description || '').toLowerCase();
                   const matchSearch = opportunitySearch === '' || 
@@ -874,18 +872,18 @@ export default function CreatorDashboardModal({ isOpen, onClose, initialTab = 'o
                                 onClick={() => {
                                   const storeData = availableStores.find(s => s.id === campaign.brand_id) || {
                                     id: campaign.brand_id,
-                                    name: campaign.brand?.brand_name || campaign.brand?.full_name || campaign.brand_name || 'متجر',
+                                    name: campaign.brand?.brand_name || campaign.brand?.full_name || campaign.brand_name || t('defaultStoreName'),
                                     brand_name: campaign.brand?.brand_name || campaign.brand_name,
                                     logo: campaign.brand?.avatar_url || campaign.brandLogo,
-                                    sector: campaign.category || 'عام',
+                                    sector: campaign.category || t('general'),
                                     verified: Boolean(campaign.brand?.is_verified ?? true)
                                   };
                                   setSelectedStoreModal(storeData);
                                 }}
                                 className="text-xs font-bold text-brand-orange hover:underline flex items-center gap-1 cursor-pointer"
-                                title="عرض معلومات المتجر"
+                                title={t('viewStoreInfo')}
                               >
-                                <span>{campaign.brand?.brand_name || campaign.brand?.full_name || campaign.brand_name || 'متجر معتمد'}</span>
+                                <span>{campaign.brand?.brand_name || campaign.brand?.full_name || campaign.brand_name || t('certifiedStore')}</span>
                                 {campaign.brand?.is_verified && <BadgeCheck className="w-3.5 h-3.5 text-brand-orange" />}
                               </button>
                               <span className="text-gray-300">•</span>
@@ -919,7 +917,7 @@ export default function CreatorDashboardModal({ isOpen, onClose, initialTab = 'o
                           return (
                             <button disabled className="bg-brand-cream border border-brand-border text-brand-brownLight font-bold rounded-full w-full py-3 flex items-center justify-center gap-2 opacity-75 cursor-not-allowed text-xs">
                               <CheckCircle2 className="w-4 h-4" />
-                              <span>تم التقديم - قيد مراجعة المتجر ⏳</span>
+                              <span>{t('appliedUnderReview')}</span>
                             </button>
                           );
                         } else if (app.status === 'approved') {
@@ -927,18 +925,18 @@ export default function CreatorDashboardModal({ isOpen, onClose, initialTab = 'o
                             return (
                               <div className="p-3 rounded-xl border border-emerald-200 bg-emerald-50 text-center text-xs text-emerald-700 font-bold flex items-center justify-center gap-2">
                                 <CheckCircle2 className="w-4 h-4" />
-                                <span>تم إرسال العمل وبانتظار المراجعة والتحرير 📦</span>
+                                <span>{t('workSubmittedWaiting')}</span>
                               </div>
                             );
                           }
                           return (
                             <div className="space-y-2.5">
                               <div className="p-2.5 rounded-xl bg-blue-50 border border-blue-200 text-blue-700 text-xs font-bold text-center">
-                                🎉 تم قبولك! المبلغ محفوظ في الضمان. أرسل رابط العمل الآن:
+                                {t('acceptedSubmitDeliverableNotice')}
                               </div>
                               <input 
                                 type="url" 
-                                placeholder="رابط العمل (Google Drive, Instagram Reel, Tiktok...)"
+                                placeholder={t('deliverableLinkPlaceholder')}
                                 className="input-field w-full text-xs font-mono"
                                 value={deliverableUrls[app.id] || ''}
                                 onChange={e => setDeliverableUrls({ ...deliverableUrls, [app.id]: e.target.value })}
@@ -947,7 +945,7 @@ export default function CreatorDashboardModal({ isOpen, onClose, initialTab = 'o
                                 onClick={() => handleSubmitDeliverable(app.id)}
                                 className="btn-primary w-full py-2.5 text-xs font-bold"
                               >
-                                تسليم رابط العمل
+                                {t('submitWorkLink')}
                               </button>
                             </div>
                           );
@@ -955,13 +953,13 @@ export default function CreatorDashboardModal({ isOpen, onClose, initialTab = 'o
                           return (
                             <div className="p-3 rounded-xl border border-purple-200 bg-purple-50 text-center text-xs text-purple-700 font-bold flex items-center justify-center gap-2">
                               <CheckCircle2 className="w-4 h-4" />
-                              <span>الصفقة مكتملة وتم تحرير الأرباح لمحفظتك ✅</span>
+                              <span>{t('dealCompletedFundsReleased')}</span>
                             </div>
                           );
                         } else if (app.status === 'rejected') {
                           return (
                             <div className="p-3 rounded-xl border border-gray-200 bg-gray-50 text-center text-xs text-gray-500 font-bold">
-                              لم يتم اختيار طلبك لهذه الحملة
+                              {t('notSelectedForThisCampaign')}
                             </div>
                           );
                         }
@@ -989,14 +987,14 @@ export default function CreatorDashboardModal({ isOpen, onClose, initialTab = 'o
             {/* Sidebar - Contacts */}
             <div className="bg-white border border-brand-border rounded-[24px] flex flex-col h-full lg:col-span-1 shadow-sm overflow-hidden">
               <div className="p-4 border-b border-brand-border font-black text-brand-brown flex items-center justify-between bg-brand-cream/50">
-                <span className="text-sm">المحادثات المباشرة</span>
+                <span className="text-sm">{t('directConversations')}</span>
               </div>
               <div className="flex-1 overflow-y-auto divide-y divide-brand-border/40">
                 {contacts.length === 0 ? (
                   <div className="p-6 text-brand-brownLight font-medium text-xs text-center space-y-2">
                     <MessageSquare className="w-8 h-8 mx-auto text-brand-orange/40" />
-                    <p>لا توجد محادثات بعد.</p>
-                    <p className="text-[11px] text-brand-brownLight/70">عندما يتواصل معك أحد المتاجر أو عند التقديم على الحملات، ستظهر الرسائل هنا.</p>
+                    <p>{t('noChatsYet')}</p>
+                    <p className="text-[11px] text-brand-brownLight/70">{t('chatsEmptyHelp')}</p>
                   </div>
                 ) : (
                   contacts.map(contact => (
@@ -1021,7 +1019,7 @@ export default function CreatorDashboardModal({ isOpen, onClose, initialTab = 'o
                       <div className="overflow-hidden flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-1">
                           <h4 className="font-bold text-brand-brown text-xs truncate flex items-center gap-1">
-                            <span>{contact.brand_name || contact.full_name || 'متجر'}</span>
+                            <span>{contact.brand_name || contact.full_name || t('defaultStoreName')}</span>
                             {contact.is_verified && <BadgeCheck className="w-3.5 h-3.5 text-brand-orange shrink-0" />}
                           </h4>
                           {contact.lastMessageAt && (
@@ -1031,7 +1029,7 @@ export default function CreatorDashboardModal({ isOpen, onClose, initialTab = 'o
                           )}
                         </div>
                         <p className="text-[11px] font-medium text-brand-brownLight truncate mt-0.5">
-                          {contact.lastMessage || contact.category || 'متجر'}
+                          {contact.lastMessage || getLocalizedCategory(contact.category, language) || t('defaultStoreName')}
                         </p>
                       </div>
                     </div>
@@ -1056,12 +1054,12 @@ export default function CreatorDashboardModal({ isOpen, onClose, initialTab = 'o
                     />
                     <div>
                       <h3 className="font-bold text-brand-brown text-sm flex items-center gap-1.5">
-                        <span>{contacts.find(c => c.id === selectedContactId)?.brand_name || contacts.find(c => c.id === selectedContactId)?.full_name || 'متجر'}</span>
+                        <span>{contacts.find(c => c.id === selectedContactId)?.brand_name || contacts.find(c => c.id === selectedContactId)?.full_name || t('defaultStoreName')}</span>
                         {contacts.find(c => c.id === selectedContactId)?.is_verified && <BadgeCheck className="w-4 h-4 text-brand-orange" />}
                       </h3>
                       <div className="flex items-center gap-2 mt-0.5">
                         <span className="text-[11px] font-medium text-emerald-600 flex items-center gap-1">
-                          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> متصل
+                          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> {t('onlineStatus')}
                         </span>
                         {contacts.find(c => c.id === selectedContactId)?.category && (
                           <>
@@ -1077,7 +1075,7 @@ export default function CreatorDashboardModal({ isOpen, onClose, initialTab = 'o
                   
                   <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-brand-cream/30">
                     {messages.length === 0 ? (
-                      <p className="text-brand-brownLight font-medium text-center text-sm">ابدأ المحادثة الآن!</p>
+                      <p className="text-brand-brownLight font-medium text-center text-sm">{t('startConversationNow')}</p>
                     ) : (
                       messages.map((msg) => {
                         const isMe = msg.sender_id === user.id;
@@ -1105,7 +1103,7 @@ export default function CreatorDashboardModal({ isOpen, onClose, initialTab = 'o
                     <form onSubmit={handleSendMessage} className="flex gap-2">
                       <input
                         type="text"
-                        placeholder="اكتب رسالتك هنا..."
+                        placeholder={t('typeYourMessage')}
                         className="flex-1 bg-brand-cream border border-brand-border rounded-full px-5 py-2 text-brand-brown text-sm focus:outline-none focus:border-brand-orange transition-colors"
                         value={chatMessage}
                         onChange={(e) => setChatMessage(e.target.value)}
@@ -1121,9 +1119,9 @@ export default function CreatorDashboardModal({ isOpen, onClose, initialTab = 'o
                   <div className="w-16 h-16 rounded-full bg-brand-orange/10 flex items-center justify-center mb-3">
                     <MessageSquare className="w-8 h-8 text-brand-orange" />
                   </div>
-                  <h4 className="font-bold text-brand-brown text-base mb-1">نافذة المحادثة والرسائل المباشرة</h4>
+                  <h4 className="font-bold text-brand-brown text-base mb-1">{t('chatWindowIntro')}</h4>
                   <p className="text-xs text-brand-brownLight max-w-xs mb-4">
-                    اختر أي متجر من القائمة الجانبية لبدء المحادثة ومناقشة تفاصيل التعاون والرعاية.
+                    {t('chatWindowDesc')}
                   </p>
                   {contacts.length > 0 && (
                     <button
@@ -1131,7 +1129,7 @@ export default function CreatorDashboardModal({ isOpen, onClose, initialTab = 'o
                       onClick={() => setSelectedContactId(contacts[0].id)}
                       className="btn-primary text-xs !py-2 !px-5 flex items-center gap-1.5"
                     >
-                      <span>بدء المحادثة مع {contacts[0].brand_name || contacts[0].full_name || 'المتجر'}</span>
+                      <span>{t('startChatWith')} {contacts[0].brand_name || contacts[0].full_name || t('defaultStoreName')}</span>
                     </button>
                   )}
                 </div>
@@ -1143,7 +1141,7 @@ export default function CreatorDashboardModal({ isOpen, onClose, initialTab = 'o
         {/* Tab 3: Profile */}
         {activeTab === 'profile' && (
           <div className="space-y-6 animate-fade-in max-w-2xl mx-auto">
-            <h3 className="text-xl font-black text-brand-brown mb-6">الملف الشخصي</h3>
+            <h3 className="text-xl font-black text-brand-brown mb-6">{t('dashProfile')}</h3>
             
             <div className="bg-white border border-brand-border rounded-[24px] p-6 shadow-sm">
               <div className="flex items-center gap-6 mb-8">
@@ -1169,30 +1167,30 @@ export default function CreatorDashboardModal({ isOpen, onClose, initialTab = 'o
 
               <div className="space-y-6">
                 <div>
-                  <label className="block text-sm font-bold text-brand-brown mb-2">التخصص</label>
+                  <label className="block text-sm font-bold text-brand-brown mb-2">{t('nicheSpecialty')}</label>
                   <select className="input-field w-full">
-                    <option value="fashion">أزياء وموضة (Fashion)</option>
-                    <option value="tech">تقنية (Tech)</option>
-                    <option value="food">طعام (Food)</option>
-                    <option value="lifestyle">أسلوب حياة (Lifestyle)</option>
+                    <option value="fashion">{getLocalizedCategory('fashion', language)}</option>
+                    <option value="tech">{getLocalizedCategory('tech', language)}</option>
+                    <option value="food">{getLocalizedCategory('food', language)}</option>
+                    <option value="lifestyle">{getLocalizedCategory('lifestyle', language)}</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-bold text-brand-brown mb-2">نبذة عنك</label>
+                  <label className="block text-sm font-bold text-brand-brown mb-2">{t('bio')}</label>
                   <textarea 
                     className="input-field w-full h-32 resize-none" 
-                    placeholder="اكتب نبذة مختصرة عنك وعن المحتوى الذي تقدمه..."
+                    placeholder={t('creatorBioPlaceholder')}
                     defaultValue={user?.user_metadata?.bio || ''}
                   ></textarea>
                 </div>
 
                 <div className="pt-4 border-t border-brand-border flex justify-end gap-3">
                   <button className="btn-secondary px-6 py-2">
-                    إلغاء
+                    {t('cancel')}
                   </button>
                   <button className="btn-primary px-6 py-2">
-                    حفظ التغييرات
+                    {t('saveChanges')}
                   </button>
                 </div>
               </div>
@@ -1214,7 +1212,7 @@ export default function CreatorDashboardModal({ isOpen, onClose, initialTab = 'o
           
           return (
             <div className="space-y-6 animate-fade-in max-w-4xl mx-auto">
-              <h3 className="text-xl font-black text-brand-brown mb-6">المحفظة والأرباح</h3>
+              <h3 className="text-xl font-black text-brand-brown mb-6">{t('walletAndEarnings')}</h3>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div className="bg-gradient-to-br from-brand-orange to-brand-orange/80 p-6 rounded-[24px] border border-brand-orange/20 shadow-sm text-white">
@@ -1222,12 +1220,12 @@ export default function CreatorDashboardModal({ isOpen, onClose, initialTab = 'o
                     <div className="p-2 bg-white/20 rounded-[12px]">
                       <CreditCard className="w-6 h-6 text-white" />
                     </div>
-                    <span className="font-bold">الرصيد المتاح</span>
+                    <span className="font-bold">{t('availableBalance')}</span>
                   </div>
                   <h4 className="text-3xl font-black">{formatDZD(availableBalance)}</h4>
-                  <p className="text-sm text-white/80 mt-2">جاهز للسحب</p>
+                  <p className="text-sm text-white/80 mt-2">{t('readyForPayout')}</p>
                   <button className="mt-4 w-full bg-white text-brand-orange font-bold py-2 rounded-full hover:bg-brand-cream transition-colors">
-                    سحب الأموال
+                    {t('withdrawFunds')}
                   </button>
                 </div>
 
@@ -1236,10 +1234,10 @@ export default function CreatorDashboardModal({ isOpen, onClose, initialTab = 'o
                     <div className="p-2 bg-brand-cream rounded-[12px]">
                       <Clock className="w-6 h-6 text-brand-brown" />
                     </div>
-                    <span className="font-bold text-brand-brownLight">أرباح قيد المراجعة</span>
+                    <span className="font-bold text-brand-brownLight">{t('pendingReviewEarnings')}</span>
                   </div>
                   <h4 className="text-3xl font-black text-brand-brown">{formatDZD(pendingEscrow)}</h4>
-                  <p className="text-sm font-medium text-brand-brownLight mt-2">يُحرّر فور الموافقة</p>
+                  <p className="text-sm font-medium text-brand-brownLight mt-2">{t('releasedUponApproval')}</p>
                 </div>
 
                 <div className="bg-white border border-brand-border p-6 rounded-[24px] shadow-sm">
@@ -1247,15 +1245,15 @@ export default function CreatorDashboardModal({ isOpen, onClose, initialTab = 'o
                     <div className="p-2 bg-emerald-50 rounded-[12px] border border-emerald-100">
                       <CheckCircle2 className="w-6 h-6 text-emerald-500" />
                     </div>
-                    <span className="font-bold text-brand-brownLight">إجمالي الأرباح السابقة</span>
+                    <span className="font-bold text-brand-brownLight">{t('totalPastEarnings')}</span>
                   </div>
                   <h4 className="text-3xl font-black text-brand-brown">{formatDZD(totalEarned)}</h4>
-                  <p className="text-sm font-medium text-brand-brownLight mt-2">منذ انضمامك</p>
+                  <p className="text-sm font-medium text-brand-brownLight mt-2">{t('sinceJoiningPlatform')}</p>
                 </div>
               </div>
 
               <div className="bg-white border border-brand-border rounded-[24px] p-6 sm:p-8 shadow-sm mb-6">
-                <h3 className="font-black text-brand-brown mb-4">طلب سحب الأرباح إلى حسابك (BaridiMob / CCP)</h3>
+                <h3 className="font-black text-brand-brown mb-4">{t('payoutToAccountTitle')}</h3>
                 
                 {payoutError && (
                   <div className="mb-4 p-3.5 bg-red-50 text-red-600 border border-red-200 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2">
@@ -1266,7 +1264,7 @@ export default function CreatorDashboardModal({ isOpen, onClose, initialTab = 'o
 
                 <form onSubmit={handlePayoutSubmit} className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-bold text-brand-brown mb-2">المبلغ (د.ج)</label>
+                    <label className="block text-sm font-bold text-brand-brown mb-2">{t('walletAmountCol')} ({t('dzd')})</label>
                     <input
                       type="number"
                       placeholder="20000"
@@ -1280,11 +1278,11 @@ export default function CreatorDashboardModal({ isOpen, onClose, initialTab = 'o
                       }}
                       required
                     />
-                    <span className="text-[11px] text-brand-brownLight mt-1 block">الحد الأدنى للسحب: 1,000 د.ج</span>
+                    <span className="text-[11px] text-brand-brownLight mt-1 block">{t('minWithdrawal1000')}</span>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-bold text-brand-brown mb-2">رقم الـ RIP (20 رقماً)</label>
+                    <label className="block text-sm font-bold text-brand-brown mb-2">{t('ripNumberLabel')}</label>
                     <input
                       type="text"
                       placeholder="00799999000000000000"
@@ -1300,7 +1298,7 @@ export default function CreatorDashboardModal({ isOpen, onClose, initialTab = 'o
                       required
                     />
                     <span className="text-[11px] text-brand-brownLight mt-1 block">
-                      {payoutForm.ripNumber ? `${payoutForm.ripNumber.length} / 20 رقم` : 'رقم الحساب البريدي المكون من 20 رقم'}
+                      {payoutForm.ripNumber ? `${payoutForm.ripNumber.length} / 20 ${t('ripDigitsCount')}` : t('ripHelperText')}
                     </span>
                   </div>
 
@@ -1310,7 +1308,7 @@ export default function CreatorDashboardModal({ isOpen, onClose, initialTab = 'o
                       disabled={payoutLoading || availableBalance < 1000} 
                       className="btn-primary w-full py-2.5 font-bold disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {payoutLoading ? 'جاري الإرسال...' : 'إرسال طلب السحب'}
+                      {payoutLoading ? t('loading') : t('sendPayoutRequest')}
                     </button>
                   </div>
                 </form>
@@ -1318,34 +1316,34 @@ export default function CreatorDashboardModal({ isOpen, onClose, initialTab = 'o
                 {payoutSuccess && (
                   <div className="mt-4 p-3 bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-xl text-sm font-bold text-center flex items-center justify-center gap-2">
                     <CheckCircle2 className="w-5 h-5" />
-                    <span>تم إرسال طلب السحب بنجاح. سيتم تحويل المبلغ إلى حسابك خلال 24 ساعة.</span>
+                    <span>{t('payoutSuccessNotice')}</span>
                   </div>
                 )}
               </div>
 
               <div className="bg-white border border-brand-border rounded-[24px] p-6 shadow-sm">
-                <h4 className="font-black text-brand-brown mb-4">سجل المعاملات</h4>
+                <h4 className="font-black text-brand-brown mb-4">{t('transactionHistory')}</h4>
                 <div className="overflow-x-auto">
-                  <table className="w-full text-sm text-right">
+                  <table className={`w-full text-sm ${language === 'ar' ? 'text-right' : 'text-left'}`}>
                     <thead className="text-xs text-brand-brownLight uppercase bg-brand-cream border-b border-brand-border font-bold">
                       <tr>
-                        <th className="px-4 py-3 rounded-tr-[12px]">التاريخ</th>
-                        <th className="px-4 py-3">الوصف</th>
-                        <th className="px-4 py-3">المبلغ</th>
-                        <th className="px-4 py-3">طريقة الدفع</th>
-                        <th className="px-4 py-3 rounded-tl-[12px]">الحالة</th>
+                        <th className={`px-4 py-3 ${language === 'ar' ? 'rounded-tr-[12px]' : 'rounded-tl-[12px]'}`}>{t('txDate')}</th>
+                        <th className="px-4 py-3">{t('txDescription')}</th>
+                        <th className="px-4 py-3">{t('txAmount')}</th>
+                        <th className="px-4 py-3">{t('txMethod')}</th>
+                        <th className={`px-4 py-3 ${language === 'ar' ? 'rounded-tl-[12px]' : 'rounded-tr-[12px]'}`}>{t('txStatus')}</th>
                       </tr>
                     </thead>
                     <tbody>
                       {localTransactions.map((tx) => {
-                        const statusCfg = getPaymentStatusConfig(tx.status);
+                        const statusCfg = getPaymentStatusConfig(tx.status, language);
                         return (
                           <tr key={tx.id} className="border-b border-brand-border hover:bg-brand-cream/50 transition-colors font-medium">
                             <td className="px-4 py-4 text-brand-brown">{tx.date}</td>
                             <td className="px-4 py-4 text-brand-brown">{tx.description}</td>
-                            <td className="px-4 py-4 font-bold text-brand-orange font-mono">{formatDZD(tx.amount)}</td>
+                            <td className="px-4 py-4 font-bold text-brand-orange font-mono">{formatDZD(tx.amount, language)}</td>
                             <td className="px-4 py-4">
-                              <span className="px-2.5 py-1 rounded-md bg-brand-cream border border-brand-border text-brand-brownLight text-xs font-bold">الذهبية</span>
+                              <span className="px-2.5 py-1 rounded-md bg-brand-cream border border-brand-border text-brand-brownLight text-xs font-bold">{t('edahabia')}</span>
                             </td>
                             <td className="px-4 py-4">
                               <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${statusCfg.bg} ${statusCfg.text} ${statusCfg.border} border`}>

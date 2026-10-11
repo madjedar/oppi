@@ -2,8 +2,11 @@ import React from 'react';
 import { Home, Compass } from 'lucide-react';
 import Header from './Header';
 import Footer from './Footer';
+import { useLanguage } from '../context/LanguageContext';
 
 function NotFound() {
+  const { t } = useLanguage();
+
   return (
     <div className="min-h-screen bg-brand-cream flex flex-col">
       <Header 
@@ -28,11 +31,11 @@ function NotFound() {
           </div>
           
           <h1 className="text-3xl sm:text-4xl font-black text-brand-brown mb-4 tracking-wide">
-            عذراً، الصفحة غير موجودة
+            {t('notFoundTitle')}
           </h1>
           
           <p className="text-brand-brownLight text-sm sm:text-base leading-relaxed mb-10 max-w-sm mx-auto">
-            يبدو أنك ضللت الطريق. الصفحة التي تبحث عنها تم نقلها، حذفها، أو أنها لم تكن موجودة أبداً.
+            {t('notFoundDesc')}
           </p>
 
           <button 
@@ -40,7 +43,7 @@ function NotFound() {
             className="inline-flex items-center justify-center gap-2 bg-brand-orange hover:bg-brand-brown text-white px-8 py-4 rounded-full font-bold transition-all shadow-md hover:shadow-xl hover:-translate-y-1"
           >
             <Home className="w-5 h-5" />
-            <span>العودة للرئيسية</span>
+            <span>{t('backToHome')}</span>
           </button>
         </div>
       </main>
